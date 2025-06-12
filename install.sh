@@ -84,7 +84,7 @@ detect_platform() {
 download_binary() {
     print_step "Downloading wkit binary from GitHub releases..."
     
-    local repo="takashabe/wkit"
+    local repo="takashabe/fwm"
     local asset_name="wkit-${PLATFORM}.${ARCHIVE_EXT}"
     local download_url="https://github.com/${repo}/releases/latest/download/${asset_name}"
     local temp_dir=$(mktemp -d)
@@ -335,8 +335,8 @@ show_usage() {
         echo "🔄 To activate Fish integration: exec fish"
     fi
     echo
-    echo "📚 Documentation: https://github.com/takashabe/wkit"
-    echo "🐛 Issues: https://github.com/takashabe/wkit/issues"
+    echo "📚 Documentation: https://github.com/takashabe/fwm"
+    echo "🐛 Issues: https://github.com/takashabe/fwm/issues"
 }
 
 # Main installation process

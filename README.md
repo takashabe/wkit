@@ -16,7 +16,7 @@ A Fish-friendly command-line tool for managing Git worktrees with enhanced produ
 
 ```bash
 # One-liner installation with Fish integration
-curl -sSL https://raw.githubusercontent.com/takashabe/wkit/main/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/takashabe/fwm/main/install.sh | bash
 ```
 
 This will:
@@ -31,19 +31,19 @@ This will:
 
 ```bash
 # Download prebuilt binary manually
-curl -L https://github.com/takashabe/wkit/releases/latest/download/wkit-x86_64-apple-darwin.tar.gz | tar xz
+curl -L https://github.com/takashabe/fwm/releases/latest/download/wkit-x86_64-apple-darwin.tar.gz | tar xz
 sudo mv wkit /usr/local/bin/
 
 # Install Fish integration (optional)
-curl -sSL https://raw.githubusercontent.com/takashabe/wkit/main/install.sh | bash -s -- --fish-only
+curl -sSL https://raw.githubusercontent.com/takashabe/fwm/main/install.sh | bash -s -- --fish-only
 ```
 
 #### Build from Source
 
 ```bash
 # Clone and build
-git clone https://github.com/takashabe/wkit.git
-cd wkit
+git clone https://github.com/takashabe/fwm.git
+cd fwm
 
 # Use the installation script
 ./install.sh --build-from-source
@@ -60,16 +60,16 @@ The installation script supports various options:
 
 ```bash
 # Build from source instead of downloading
-curl -sSL https://raw.githubusercontent.com/takashabe/wkit/main/install.sh | bash -s -- --build-from-source
+curl -sSL https://raw.githubusercontent.com/takashabe/fwm/main/install.sh | bash -s -- --build-from-source
 
 # Download only (fail if prebuilt binary unavailable)
-curl -sSL https://raw.githubusercontent.com/takashabe/wkit/main/install.sh | bash -s -- --download-only
+curl -sSL https://raw.githubusercontent.com/takashabe/fwm/main/install.sh | bash -s -- --download-only
 
 # Install only binary (skip Fish integration)
-curl -sSL https://raw.githubusercontent.com/takashabe/wkit/main/install.sh | bash -s -- --binary-only
+curl -sSL https://raw.githubusercontent.com/takashabe/fwm/main/install.sh | bash -s -- --binary-only
 
 # Install only Fish integration (assume binary exists)
-curl -sSL https://raw.githubusercontent.com/takashabe/wkit/main/install.sh | bash -s -- --fish-only
+curl -sSL https://raw.githubusercontent.com/takashabe/fwm/main/install.sh | bash -s -- --fish-only
 ```
 
 ## Usage

@@ -84,7 +84,7 @@ detect_platform() {
 download_binary() {
     print_step "Downloading wkit binary from GitHub releases..."
     
-    local repo="takashabe/fwm"
+    local repo="takashabe/wkit"
     local asset_name="wkit-${PLATFORM}.${ARCHIVE_EXT}"
     local download_url="https://github.com/${repo}/releases/latest/download/${asset_name}"
     local temp_dir=$(mktemp -d)
@@ -335,28 +335,22 @@ show_usage() {
         echo "🔄 To activate Fish integration: exec fish"
     fi
     echo
-    echo "📚 Documentation: https://github.com/takashabe/fwm"
-    echo "🐛 Issues: https://github.com/takashabe/fwm/issues"
+    echo "📚 Documentation: https://github.com/takashabe/wkit"
+    echo "🐛 Issues: https://github.com/takashabe/wkit/issues"
 }
 
 # Main installation process
 main() {
     print_header
     
-    detect_platform
-    
-    # Try to download prebuilt binary first
-    if check_basic_requirements && download_binary; then
-        install_downloaded_binary
+    # Build from source
+    if check_build_requirements; then
+        build_binary
+        install_binary
     else
-        print_info "Download failed, trying to build from source..."
-        if check_build_requirements; then
-            build_binary
-            install_binary
-        else
-            print_error "Cannot download prebuilt binary and build requirements are not met"
-            exit 1
-        fi
+        print_error "Build requirements are not met. Please install Rust and try again."
+        echo "To install Rust: curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh"
+        exit 1
     fi
     
     create_default_config
@@ -388,8 +382,6 @@ while [[ $# -gt 0 ]]; do
             echo "  --help, -h        Show this help message"
             echo "  --binary-only     Install only the binary (skip Fish integration)"
             echo "  --fish-only       Install only Fish integration (assume binary exists)"
-            echo "  --build-from-source  Force building from source instead of downloading"
-            echo "  --download-only   Force downloading prebuilt binary (fail if unavailable)"
             echo
             exit 0
             ;;
@@ -399,14 +391,6 @@ while [[ $# -gt 0 ]]; do
             ;;
         --fish-only)
             FISH_ONLY=1
-            shift
-            ;;
-        --build-from-source)
-            BUILD_FROM_SOURCE=1
-            shift
-            ;;
-        --download-only)
-            DOWNLOAD_ONLY=1
             shift
             ;;
         *)
@@ -423,51 +407,10 @@ if [ "${FISH_ONLY}" = "1" ]; then
     install_fish_integration
 elif [ "${BINARY_ONLY}" = "1" ]; then
     print_header
-    detect_platform
-    
-    if [ "${BUILD_FROM_SOURCE}" = "1" ]; then
-        check_build_requirements
-        build_binary
-        install_binary
-    elif [ "${DOWNLOAD_ONLY}" = "1" ]; then
-        check_basic_requirements
-        download_binary
-        install_downloaded_binary
-    else
-        # Try download first, fallback to build
-        if check_basic_requirements && download_binary; then
-            install_downloaded_binary
-        else
-            print_info "Download failed, trying to build from source..."
-            check_build_requirements
-            build_binary
-            install_binary
-        fi
-    fi
-    
-    create_default_config
-    show_usage
-elif [ "${BUILD_FROM_SOURCE}" = "1" ]; then
-    print_header
-    detect_platform
     check_build_requirements
     build_binary
     install_binary
     create_default_config
-    if command_exists fish; then
-        install_fish_integration
-    fi
-    show_usage
-elif [ "${DOWNLOAD_ONLY}" = "1" ]; then
-    print_header
-    detect_platform
-    check_basic_requirements
-    download_binary
-    install_downloaded_binary
-    create_default_config
-    if command_exists fish; then
-        install_fish_integration
-    fi
     show_usage
 else
     main

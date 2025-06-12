@@ -15,43 +15,45 @@ A Fish-friendly command-line tool for managing Git worktrees with enhanced produ
 ### 🚀 Quick Install (Recommended)
 
 ```bash
-# One-liner installation with Fish integration
-curl -sSL https://raw.githubusercontent.com/takashabe/fwm/main/install.sh | bash
+# Clone and run automatic installer
+git clone https://github.com/takashabe/wkit.git
+cd wkit
+./install.sh
 ```
 
 This will:
-- Automatically download the latest prebuilt binary for your platform
-- Install Fish functions with tab completion and aliases
-- Set up default configuration
-- Fall back to building from source if download fails
+- Build the binary from source
+- Install to `/usr/local/bin/`
+- Set up Fish shell integration with tab completion and aliases
+- Create default configuration
 
-### 📦 Alternative Installation Methods
-
-#### From GitHub Releases
-
-```bash
-# Download prebuilt binary manually
-curl -L https://github.com/takashabe/fwm/releases/latest/download/wkit-x86_64-apple-darwin.tar.gz | tar xz
-sudo mv wkit /usr/local/bin/
-
-# Install Fish integration (optional)
-curl -sSL https://raw.githubusercontent.com/takashabe/fwm/main/install.sh | bash -s -- --fish-only
-```
+### 📦 Manual Installation
 
 #### Build from Source
 
 ```bash
-# Clone and build
-git clone https://github.com/takashabe/fwm.git
-cd fwm
+# Clone the repository
+git clone https://github.com/takashabe/wkit.git
+cd wkit
 
-# Use the installation script
-./install.sh --build-from-source
-
-# Or manually
+# Build the binary
 cargo build --release
+
+# Install to system PATH
 sudo cp target/release/wkit /usr/local/bin/
-./install.fish  # Fish integration
+
+# Install Fish integration (optional but recommended)
+./install.fish
+```
+
+#### Fish Shell Integration Only
+
+If you already have wkit installed and just want Fish integration:
+
+```bash
+git clone https://github.com/takashabe/wkit.git
+cd wkit
+./install.fish
 ```
 
 ### 🔧 Installation Options
@@ -59,18 +61,21 @@ sudo cp target/release/wkit /usr/local/bin/
 The installation script supports various options:
 
 ```bash
-# Build from source instead of downloading
-curl -sSL https://raw.githubusercontent.com/takashabe/fwm/main/install.sh | bash -s -- --build-from-source
-
-# Download only (fail if prebuilt binary unavailable)
-curl -sSL https://raw.githubusercontent.com/takashabe/fwm/main/install.sh | bash -s -- --download-only
-
 # Install only binary (skip Fish integration)
-curl -sSL https://raw.githubusercontent.com/takashabe/fwm/main/install.sh | bash -s -- --binary-only
+./install.sh --binary-only
 
 # Install only Fish integration (assume binary exists)
-curl -sSL https://raw.githubusercontent.com/takashabe/fwm/main/install.sh | bash -s -- --fish-only
+./install.sh --fish-only
+
+# Show all available options
+./install.sh --help
 ```
+
+### 📋 Requirements
+
+- **Rust toolchain** - Install from [rustup.rs](https://rustup.rs/)
+- **Git** - For cloning the repository
+- **Fish shell** - Optional, for enhanced shell integration
 
 ## Usage
 

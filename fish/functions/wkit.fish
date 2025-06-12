@@ -70,7 +70,21 @@ end
 
 # Worktree status function
 function wkit-status -d "Show status of all worktrees"
-    wkit-list-preview
+    wkit status
+end
+
+# Sync worktree function
+function wkit-sync -d "Sync current or specified worktree with main branch"
+    if test (count $argv) -eq 0
+        wkit sync
+    else
+        wkit sync $argv
+    end
+end
+
+# Clean worktrees function
+function wkit-clean -d "Clean up unnecessary worktrees interactively"
+    wkit clean
 end
 
 # Clean up function
@@ -92,6 +106,8 @@ alias wl="wkit list"
 alias wa="wkit add"
 alias wr="wkit remove"
 alias wst="wkit-status"
+alias wsy="wkit-sync"
+alias wcl="wkit-clean"
 
 # Enhanced tab completion
 complete -c wkit -f
@@ -102,6 +118,9 @@ complete -c wkit -n '__fish_use_subcommand' -a 'add' -d 'Add a new worktree'
 complete -c wkit -n '__fish_use_subcommand' -a 'remove' -d 'Remove a worktree'
 complete -c wkit -n '__fish_use_subcommand' -a 'switch' -d 'Switch to a worktree'
 complete -c wkit -n '__fish_use_subcommand' -a 'config' -d 'Manage configuration'
+complete -c wkit -n '__fish_use_subcommand' -a 'status' -d 'Show git status of all worktrees'
+complete -c wkit -n '__fish_use_subcommand' -a 'clean' -d 'Clean up unnecessary worktrees'
+complete -c wkit -n '__fish_use_subcommand' -a 'sync' -d 'Sync worktree with main branch'
 complete -c wkit -n '__fish_use_subcommand' -a 'z' -d 'Frecency-based worktree jumping'
 
 # Config subcommand completions
@@ -113,6 +132,8 @@ complete -c wkit -n '__fish_seen_subcommand_from config; and __fish_use_subcomma
 complete -c wkit -n '__fish_seen_subcommand_from config; and __fish_seen_subcommand_from set' -a 'default_worktree_path' -d 'Default path for new worktrees'
 complete -c wkit -n '__fish_seen_subcommand_from config; and __fish_seen_subcommand_from set' -a 'auto_cleanup' -d 'Auto cleanup deleted branches'
 complete -c wkit -n '__fish_seen_subcommand_from config; and __fish_seen_subcommand_from set' -a 'z_integration' -d 'Enable z integration'
+complete -c wkit -n '__fish_seen_subcommand_from config; and __fish_seen_subcommand_from set' -a 'default_sync_strategy' -d 'Default sync strategy (merge/rebase)'
+complete -c wkit -n '__fish_seen_subcommand_from config; and __fish_seen_subcommand_from set' -a 'main_branch' -d 'Main branch name'
 
 # Worktree name completions for switch and remove
 function __wkit_complete_worktrees
@@ -126,6 +147,13 @@ complete -c wkit -n '__fish_seen_subcommand_from add' -f -a "(git branch -a 2>/d
 
 # Path argument for add command (as second argument)
 complete -c wkit -n '__fish_seen_subcommand_from add; and test (count (commandline -opc)) -eq 3' -f -a "(__fish_complete_directories)"
+
+# Clean command options
+complete -c wkit -n '__fish_seen_subcommand_from clean' -s f -l force -d 'Skip confirmation prompt'
+
+# Sync command options
+complete -c wkit -n '__fish_seen_subcommand_from sync' -s r -l rebase -d 'Use rebase instead of merge'
+complete -c wkit -n '__fish_seen_subcommand_from sync' -f -a '(__wkit_complete_worktrees)' -d 'Worktree to sync'
 
 # Z command options
 complete -c wkit -n '__fish_seen_subcommand_from z' -s l -l list -d 'List all matches instead of jumping'

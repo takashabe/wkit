@@ -27,6 +27,9 @@ enum Commands {
         branch: String,
         /// Path for the worktree (optional)
         path: Option<String>,
+        /// Skip automatic switching to new worktree
+        #[arg(long)]
+        no_switch: bool,
     },
     /// Remove a worktree
     Remove {
@@ -96,7 +99,7 @@ fn main() {
 
     let result = match cli.command {
         Commands::List => cmd_list(&manager),
-        Commands::Add { branch, path } => cmd_add(&manager, &branch, path.as_deref()),
+        Commands::Add { branch, path, no_switch } => cmd_add(&manager, &branch, path.as_deref(), no_switch),
         Commands::Remove { worktree } => cmd_remove(&manager, &worktree),
         Commands::Switch { worktree } => cmd_switch(&manager, &worktree),
         Commands::Config { config_cmd } => cmd_config(config_cmd),
@@ -139,7 +142,7 @@ fn cmd_list(manager: &WorktreeManager) -> Result<()> {
     Ok(())
 }
 
-fn cmd_add(manager: &WorktreeManager, branch: &str, path: Option<&str>) -> Result<()> {
+fn cmd_add(manager: &WorktreeManager, branch: &str, path: Option<&str>, no_switch: bool) -> Result<()> {
     let config = Config::load()?;
     let target_path = config.resolve_worktree_path(branch, path);
     
@@ -168,6 +171,11 @@ fn cmd_add(manager: &WorktreeManager, branch: &str, path: Option<&str>) -> Resul
         let z_integration = ZIntegration::new();
         z_integration.create_smart_alias(&target_path, branch)?;
         println!("  Added to z database with smart alias");
+    }
+    
+    // Auto-switch to new worktree unless --no-switch is specified
+    if !no_switch {
+        println!("{}", target_path);
     }
     
     Ok(())

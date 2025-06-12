@@ -5,7 +5,7 @@ if command -q wkit
     # Set up aliases
     alias ws="wkit-switch"
     alias wl="wkit list"
-    alias wa="wkit add"
+    alias wa="wkit-add-auto"
     alias wr="wkit remove"
     alias wst="wkit-status"
     alias wsy="wkit-sync"

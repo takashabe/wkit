@@ -93,7 +93,15 @@ impl WorktreeManager {
             format!("../{}", branch)
         };
 
-        cmd.arg(&target_path).arg(branch);
+        // Check if branch exists
+        let branch_exists = self.branch_exists(branch)?;
+        
+        if !branch_exists {
+            // Use -b flag to create new branch
+            cmd.arg("-b").arg(branch).arg(&target_path);
+        } else {
+            cmd.arg(&target_path).arg(branch);
+        }
 
         let output = cmd.output()
             .context("Failed to execute git worktree add")?;
@@ -104,6 +112,15 @@ impl WorktreeManager {
         }
 
         Ok(())
+    }
+
+    fn branch_exists(&self, branch: &str) -> Result<bool> {
+        let output = Command::new("git")
+            .args(["show-ref", "--verify", "--quiet", &format!("refs/heads/{}", branch)])
+            .output()
+            .context("Failed to check if branch exists")?;
+
+        Ok(output.status.success())
     }
 
     pub fn remove_worktree(&self, path: &str) -> Result<()> {

@@ -11,6 +11,10 @@ pub struct Config {
     pub auto_cleanup: bool,
     #[serde(default)]
     pub z_integration: bool,
+    #[serde(default = "default_sync_strategy")]
+    pub default_sync_strategy: String,
+    #[serde(default = "default_main_branch")]
+    pub main_branch: String,
 }
 
 impl Default for Config {
@@ -19,12 +23,22 @@ impl Default for Config {
             default_worktree_path: default_worktree_path(),
             auto_cleanup: false,
             z_integration: true,
+            default_sync_strategy: default_sync_strategy(),
+            main_branch: default_main_branch(),
         }
     }
 }
 
 fn default_worktree_path() -> String {
     "..".to_string()
+}
+
+fn default_sync_strategy() -> String {
+    "merge".to_string()
+}
+
+fn default_main_branch() -> String {
+    "main".to_string()
 }
 
 impl Config {

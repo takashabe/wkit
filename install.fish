@@ -121,6 +121,9 @@ function show_usage
     echo "  wkit add <branch>      - Add new worktree"
     echo "  wkit remove <worktree> - Remove worktree"
     echo "  wkit switch <worktree> - Switch to worktree"
+    echo "  wkit status            - Show git status of all worktrees"
+    echo "  wkit clean [--force]   - Clean up unnecessary worktrees"
+    echo "  wkit sync [worktree]   - Sync with main branch"
     echo "  wkit config show       - Show configuration"
     echo
     echo "🚀 Fish Integration:"
@@ -128,6 +131,8 @@ function show_usage
     echo "  wl                     - Quick list alias"
     echo "  wa <branch>            - Quick add alias"
     echo "  wst                    - Show worktree status"
+    echo "  wsy [worktree]         - Quick sync alias"
+    echo "  wcl                    - Quick clean alias"
     echo "  wkit-add-quick <name>  - Quickly create worktree from current branch"
     echo
     echo "🎨 Prompt Integration:"
@@ -137,6 +142,8 @@ function show_usage
     echo "⚙️  Configuration:"
     echo "  wkit config init       - Create local .wkit.toml"
     echo "  wkit config set default_worktree_path ../worktrees"
+    echo "  wkit config set default_sync_strategy rebase"
+    echo "  wkit config set main_branch develop"
     echo
     echo "📚 Tab Completion:"
     echo "  All commands have tab completion for worktrees, branches, and config keys"

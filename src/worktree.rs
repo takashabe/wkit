@@ -1,6 +1,6 @@
 use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::process::Command;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -9,6 +9,17 @@ pub struct Worktree {
     pub branch: String,
     pub head: String,
     pub is_bare: bool,
+}
+
+#[derive(Debug, Clone)]
+pub struct WorktreeStatus {
+    pub is_clean: bool,
+    pub modified: usize,
+    pub added: usize,
+    pub deleted: usize,
+    pub untracked: usize,
+    pub ahead: usize,
+    pub behind: usize,
 }
 
 pub struct WorktreeManager;
@@ -128,6 +139,163 @@ impl WorktreeManager {
         }
 
         Ok(None)
+    }
+
+    pub fn get_worktree_status(&self, worktree_path: &Path) -> Result<WorktreeStatus> {
+        let output = Command::new("git")
+            .args(["status", "--porcelain", "--ahead-behind"])
+            .current_dir(worktree_path)
+            .output()
+            .context("Failed to execute git status")?;
+
+        if !output.status.success() {
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            anyhow::bail!("git status failed: {}", stderr);
+        }
+
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        self.parse_git_status(&stdout)
+    }
+
+    fn parse_git_status(&self, output: &str) -> Result<WorktreeStatus> {
+        let mut modified = 0;
+        let mut added = 0;
+        let mut deleted = 0;
+        let mut untracked = 0;
+
+        for line in output.lines() {
+            if line.len() < 2 {
+                continue;
+            }
+
+            let staged = &line[0..1];
+            let unstaged = &line[1..2];
+
+            match (staged, unstaged) {
+                ("A", _) => added += 1,
+                ("M", _) | (_, "M") => modified += 1,
+                ("D", _) | (_, "D") => deleted += 1,
+                ("?", "?") => untracked += 1,
+                _ => {}
+            }
+        }
+
+        let is_clean = modified == 0 && added == 0 && deleted == 0 && untracked == 0;
+
+        Ok(WorktreeStatus {
+            is_clean,
+            modified,
+            added,
+            deleted,
+            untracked,
+            ahead: 0,
+            behind: 0,
+        })
+    }
+
+    pub fn find_unnecessary_worktrees(&self) -> Result<Vec<(Worktree, String)>> {
+        self.find_unnecessary_worktrees_with_main("main")
+    }
+
+    pub fn find_unnecessary_worktrees_with_main(&self, main_branch: &str) -> Result<Vec<(Worktree, String)>> {
+        let worktrees = self.list_worktrees()?;
+        let mut unnecessary = Vec::new();
+
+        for worktree in worktrees {
+            if worktree.is_bare {
+                continue;
+            }
+
+            // Check if branch is merged into main
+            if self.is_branch_merged_into(&worktree.branch, main_branch)? {
+                unnecessary.push((worktree.clone(), format!("Branch merged into {}", main_branch)));
+                continue;
+            }
+
+            // Check if worktree path doesn't exist
+            if !worktree.path.exists() {
+                unnecessary.push((worktree.clone(), "Worktree path does not exist".to_string()));
+                continue;
+            }
+
+            // Check if branch doesn't exist remotely
+            if self.is_branch_deleted_remotely(&worktree.branch)? {
+                unnecessary.push((worktree.clone(), "Branch deleted remotely".to_string()));
+            }
+        }
+
+        Ok(unnecessary)
+    }
+
+    fn is_branch_merged(&self, branch: &str) -> Result<bool> {
+        self.is_branch_merged_into(branch, "main")
+    }
+
+    fn is_branch_merged_into(&self, branch: &str, main_branch: &str) -> Result<bool> {
+        let output = Command::new("git")
+            .args(["branch", "--merged", main_branch])
+            .output()
+            .context("Failed to check merged branches")?;
+
+        if !output.status.success() {
+            return Ok(false);
+        }
+
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        Ok(stdout.lines().any(|line| line.trim() == branch || line.trim() == &format!("* {}", branch)))
+    }
+
+    fn is_branch_deleted_remotely(&self, branch: &str) -> Result<bool> {
+        let output = Command::new("git")
+            .args(["ls-remote", "--heads", "origin", branch])
+            .output()
+            .context("Failed to check remote branch")?;
+
+        if !output.status.success() {
+            return Ok(false);
+        }
+
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        Ok(stdout.trim().is_empty())
+    }
+
+    pub fn sync_worktree(&self, worktree: &Worktree, use_rebase: bool) -> Result<()> {
+        self.sync_worktree_with_branch(worktree, "main", use_rebase)
+    }
+
+    pub fn sync_worktree_with_branch(&self, worktree: &Worktree, main_branch: &str, use_rebase: bool) -> Result<()> {
+        // First, fetch latest changes
+        let output = Command::new("git")
+            .args(["fetch", "origin"])
+            .current_dir(&worktree.path)
+            .output()
+            .context("Failed to fetch from origin")?;
+
+        if !output.status.success() {
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            anyhow::bail!("git fetch failed: {}", stderr);
+        }
+
+        // Then sync with specified branch
+        let origin_branch = format!("origin/{}", main_branch);
+        let sync_cmd = if use_rebase {
+            vec!["rebase", &origin_branch]
+        } else {
+            vec!["merge", &origin_branch]
+        };
+
+        let output = Command::new("git")
+            .args(&sync_cmd)
+            .current_dir(&worktree.path)
+            .output()
+            .with_context(|| format!("Failed to {} with {}", if use_rebase { "rebase" } else { "merge" }, main_branch))?;
+
+        if !output.status.success() {
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            anyhow::bail!("{} with {} failed: {}", if use_rebase { "Rebase" } else { "Merge" }, main_branch, stderr);
+        }
+
+        Ok(())
     }
 }
 

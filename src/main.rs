@@ -43,6 +43,22 @@ enum Commands {
         #[command(subcommand)]
         config_cmd: ConfigCommands,
     },
+    /// Show git status of all worktrees
+    Status,
+    /// Clean up unnecessary worktrees
+    Clean {
+        /// Skip confirmation prompt
+        #[arg(short, long)]
+        force: bool,
+    },
+    /// Sync worktree with main branch
+    Sync {
+        /// Worktree path or name to sync
+        worktree: Option<String>,
+        /// Use rebase instead of merge
+        #[arg(short, long)]
+        rebase: bool,
+    },
     /// Z-style frecency-based worktree jumping
     Z {
         /// Query string to search for worktrees
@@ -65,7 +81,7 @@ enum ConfigCommands {
     Show,
     /// Set a configuration value
     Set {
-        /// Configuration key (default_worktree_path, auto_cleanup, z_integration)
+        /// Configuration key (default_worktree_path, auto_cleanup, z_integration, default_sync_strategy, main_branch)
         key: String,
         /// Configuration value
         value: String,
@@ -84,6 +100,9 @@ fn main() {
         Commands::Remove { worktree } => cmd_remove(&manager, &worktree),
         Commands::Switch { worktree } => cmd_switch(&manager, &worktree),
         Commands::Config { config_cmd } => cmd_config(config_cmd),
+        Commands::Status => cmd_status(&manager),
+        Commands::Clean { force } => cmd_clean(&manager, force),
+        Commands::Sync { worktree, rebase } => cmd_sync(&manager, worktree.as_deref(), rebase),
         Commands::Z { query, list, clean, add } => cmd_z(query.as_deref(), list, clean, add),
     };
 
@@ -182,6 +201,8 @@ fn cmd_config(config_cmd: ConfigCommands) -> Result<()> {
             println!("  default_worktree_path: {}", config.default_worktree_path);
             println!("  auto_cleanup: {}", config.auto_cleanup);
             println!("  z_integration: {}", config.z_integration);
+            println!("  default_sync_strategy: {}", config.default_sync_strategy);
+            println!("  main_branch: {}", config.main_branch);
         }
         ConfigCommands::Set { key, value } => {
             let mut config = Config::load()?;
@@ -199,8 +220,17 @@ fn cmd_config(config_cmd: ConfigCommands) -> Result<()> {
                     config.z_integration = value.parse()
                         .map_err(|_| anyhow::anyhow!("Invalid boolean value: {}", value))?;
                 }
+                "default_sync_strategy" => {
+                    if value != "merge" && value != "rebase" {
+                        anyhow::bail!("Invalid sync strategy: {}. Valid values: merge, rebase", value);
+                    }
+                    config.default_sync_strategy = value;
+                }
+                "main_branch" => {
+                    config.main_branch = value;
+                }
                 _ => {
-                    anyhow::bail!("Unknown configuration key: {}. Valid keys: default_worktree_path, auto_cleanup, z_integration", key);
+                    anyhow::bail!("Unknown configuration key: {}. Valid keys: default_worktree_path, auto_cleanup, z_integration, default_sync_strategy, main_branch", key);
                 }
             }
             
@@ -213,6 +243,119 @@ fn cmd_config(config_cmd: ConfigCommands) -> Result<()> {
             println!("✓ Created local configuration file: .wkit.toml");
         }
     }
+    Ok(())
+}
+
+fn cmd_status(manager: &WorktreeManager) -> Result<()> {
+    let worktrees = manager.list_worktrees()?;
+    if worktrees.is_empty() {
+        println!("No worktrees found.");
+        return Ok(());
+    }
+
+    println!("{:<30} {:<20} {:<12} {:<15}", "PATH", "BRANCH", "HEAD", "STATUS");
+    println!("{}", "-".repeat(80));
+    
+    for wt in worktrees {
+        let path_str = wt.path.to_string_lossy();
+        let head_short = if wt.head.len() > 10 {
+            &wt.head[..10]
+        } else {
+            &wt.head
+        };
+        
+        let status = manager.get_worktree_status(&wt.path)?;
+        let status_str = if status.is_clean {
+            "Clean".to_string()
+        } else {
+            format!("{}M {}A {}D", status.modified, status.added, status.deleted)
+        };
+        
+        println!("{:<30} {:<20} {:<12} {:<15}", 
+            path_str, 
+            wt.branch, 
+            head_short,
+            &status_str
+        );
+        
+        if !status.is_clean {
+            if status.modified > 0 {
+                println!("  📝 {} modified files", status.modified);
+            }
+            if status.added > 0 {
+                println!("  ➕ {} added files", status.added);
+            }
+            if status.deleted > 0 {
+                println!("  ❌ {} deleted files", status.deleted);
+            }
+            if status.untracked > 0 {
+                println!("  ❓ {} untracked files", status.untracked);
+            }
+        }
+    }
+    Ok(())
+}
+
+fn cmd_clean(manager: &WorktreeManager, force: bool) -> Result<()> {
+    let config = Config::load()?;
+    let unnecessary_worktrees = manager.find_unnecessary_worktrees_with_main(&config.main_branch)?;
+    
+    if unnecessary_worktrees.is_empty() {
+        println!("No unnecessary worktrees found.");
+        return Ok(());
+    }
+
+    println!("Found {} unnecessary worktree(s):", unnecessary_worktrees.len());
+    for (wt, reason) in &unnecessary_worktrees {
+        println!("  {} - {}", wt.path.display(), reason);
+    }
+
+    if !force {
+        print!("\nRemove these worktrees? (y/N): ");
+        use std::io::{self, Write};
+        io::stdout().flush()?;
+        
+        let mut input = String::new();
+        io::stdin().read_line(&mut input)?;
+        
+        if input.trim().to_lowercase() != "y" {
+            println!("Cancelled.");
+            return Ok(());
+        }
+    }
+
+    for (wt, _) in unnecessary_worktrees {
+        let path_str = wt.path.to_string_lossy();
+        manager.remove_worktree(&path_str)?;
+        println!("✓ Removed worktree at '{}'", path_str);
+    }
+
+    Ok(())
+}
+
+fn cmd_sync(manager: &WorktreeManager, worktree: Option<&str>, rebase: bool) -> Result<()> {
+    let config = Config::load()?;
+    let target_worktree = if let Some(name) = worktree {
+        manager.find_worktree_by_name(name)?
+            .ok_or_else(|| anyhow::anyhow!("Worktree '{}' not found", name))?
+    } else {
+        // Use current directory as worktree
+        let current_dir = std::env::current_dir()?;
+        let worktrees = manager.list_worktrees()?;
+        worktrees.into_iter()
+            .find(|wt| wt.path == current_dir)
+            .ok_or_else(|| anyhow::anyhow!("Current directory is not a worktree"))?
+    };
+
+    // Use rebase flag if provided, otherwise use config default
+    let use_rebase = rebase || (config.default_sync_strategy == "rebase");
+    let sync_strategy = if use_rebase { "rebase" } else { "merge" };
+    println!("Syncing worktree '{}' with {} branch using {}...", 
+             target_worktree.branch, config.main_branch, sync_strategy);
+
+    manager.sync_worktree_with_branch(&target_worktree, &config.main_branch, use_rebase)?;
+    println!("✓ Successfully synced worktree '{}'", target_worktree.branch);
+    
     Ok(())
 }
 

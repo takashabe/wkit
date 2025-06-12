@@ -84,11 +84,20 @@ impl WorktreeManager {
     }
 
     pub fn add_worktree(&self, branch: &str, path: Option<&str>) -> Result<()> {
+        // path should be provided by the caller (using config)
+        let target_path = path
+            .ok_or_else(|| anyhow::anyhow!("Path must be provided"))?
+            .to_string();
+
         let mut cmd = Command::new("git");
         cmd.args(["worktree", "add"]);
 
-        let target_path = if let Some(p) = path {
-            p.to_string()
+        // Check if branch exists
+        let branch_exists = self.branch_exists(branch)?;
+        
+        if !branch_exists {
+            // Use -b flag to create new branch
+            cmd.arg("-b").arg(branch).arg(&target_path);
         } else {
             format!("../{}", branch)
         };

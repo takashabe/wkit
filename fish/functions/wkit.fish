@@ -133,4 +133,30 @@ function z-wkit -d "Enhanced z function with wkit integration"
     end
 end
 
+# Enhanced add function with auto-switch capability
+function wkit-add-auto -d "Add worktree with optional auto-switch"
+    if test (count $argv) -eq 0
+        echo "Error: Please specify a branch name" >&2
+        return 1
+    end
+    
+    set -l wkit_output (wkit add $argv 2>&1)
+    set -l exit_code $status
+    
+    echo "$wkit_output"
+    
+    if test $exit_code -eq 0
+        # Check if the last line is a path (auto-switch output)
+        set -l last_line (echo "$wkit_output" | tail -n 1)
+        
+        # If last line looks like a path, switch to it
+        if test -d "$last_line"
+            cd "$last_line"
+            echo "✓ Automatically switched to: "(basename "$last_line")" at $last_line"
+        end
+    end
+    
+    return $exit_code
+end
+
 # Note: Abbreviations are handled by conf.d/wkit.fish

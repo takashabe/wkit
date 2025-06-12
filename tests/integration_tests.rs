@@ -79,3 +79,13 @@ fn test_z_list_without_query() {
         .success()
         .stdout(predicates::str::contains("Z database entries"));
 }
+
+#[test]
+fn test_add_help_contains_no_switch_flag() {
+    let mut cmd = Command::cargo_bin("wkit").unwrap();
+    cmd.args(["add", "--help"]);
+    cmd.assert()
+        .success()
+        .stdout(predicates::str::contains("--no-switch"))
+        .stdout(predicates::str::contains("Skip automatic switching to new worktree"));
+}

@@ -146,13 +146,14 @@ function wkit-add-auto -d "Add worktree with optional auto-switch"
     echo "$wkit_output"
     
     if test $exit_code -eq 0
-        # Check if the last line is a path (auto-switch output)
-        set -l last_line (echo "$wkit_output" | tail -n 1)
+        # Extract the last word which should be the path
+        set -l words (echo "$wkit_output" | string split ' ')
+        set -l potential_path $words[-1]
         
-        # If last line looks like a path, switch to it
-        if test -d "$last_line"
-            cd "$last_line"
-            echo "✓ Automatically switched to: "(basename "$last_line")" at $last_line"
+        # If the last word looks like a path, switch to it
+        if test -d "$potential_path"
+            cd "$potential_path"
+            echo "✓ Automatically switched to: "(basename "$potential_path")" at $potential_path"
         end
     end
     

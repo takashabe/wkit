@@ -30,7 +30,7 @@ impl Default for Config {
 }
 
 fn default_worktree_path() -> String {
-    "..".to_string()
+    ".wkit-worktrees".to_string()
 }
 
 fn default_sync_strategy() -> String {
@@ -122,7 +122,7 @@ mod tests {
     #[test]
     fn test_default_config() {
         let config = Config::default();
-        assert_eq!(config.default_worktree_path, "..");
+        assert_eq!(config.default_worktree_path, ".wkit-worktrees");
         assert!(!config.auto_cleanup);
         assert!(config.z_integration);
     }
@@ -138,7 +138,7 @@ mod tests {
     fn test_resolve_worktree_path_with_default_relative() {
         let config = Config::default();
         let result = config.resolve_worktree_path("feature", None);
-        assert_eq!(result, "../feature");
+        assert_eq!(result, ".wkit-worktrees/feature");
     }
 
     #[test]

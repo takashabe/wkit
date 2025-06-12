@@ -12,32 +12,65 @@ A Fish-friendly command-line tool for managing Git worktrees with enhanced produ
 
 ## Installation
 
-### 1. Build and Install
+### 🚀 Quick Install (Recommended)
 
 ```bash
-# Clone the repository
-git clone https://github.com/takashabe/wkit.git
-cd wkit
-
-# Build the binary
-cargo build --release
-
-# Install to system PATH
-sudo cp target/release/wkit /usr/local/bin/
-```
-
-### 2. Fish Shell Integration (Optional but Recommended)
-
-```bash
-# Run the Fish integration installer
-./install.fish
+# One-liner installation with Fish integration
+curl -sSL https://raw.githubusercontent.com/takashabe/wkit/main/install.sh | bash
 ```
 
 This will:
-- Install Fish functions with tab completion
-- Set up convenient aliases (`ws`, `wl`, `wa`, etc.)
-- Add prompt integration capabilities
-- Configure your Fish shell automatically
+- Automatically download the latest prebuilt binary for your platform
+- Install Fish functions with tab completion and aliases
+- Set up default configuration
+- Fall back to building from source if download fails
+
+### 📦 Alternative Installation Methods
+
+#### From GitHub Releases
+
+```bash
+# Download prebuilt binary manually
+curl -L https://github.com/takashabe/wkit/releases/latest/download/wkit-x86_64-apple-darwin.tar.gz | tar xz
+sudo mv wkit /usr/local/bin/
+
+# Install Fish integration (optional)
+curl -sSL https://raw.githubusercontent.com/takashabe/wkit/main/install.sh | bash -s -- --fish-only
+```
+
+#### Build from Source
+
+```bash
+# Clone and build
+git clone https://github.com/takashabe/wkit.git
+cd wkit
+
+# Use the installation script
+./install.sh --build-from-source
+
+# Or manually
+cargo build --release
+sudo cp target/release/wkit /usr/local/bin/
+./install.fish  # Fish integration
+```
+
+### 🔧 Installation Options
+
+The installation script supports various options:
+
+```bash
+# Build from source instead of downloading
+curl -sSL https://raw.githubusercontent.com/takashabe/wkit/main/install.sh | bash -s -- --build-from-source
+
+# Download only (fail if prebuilt binary unavailable)
+curl -sSL https://raw.githubusercontent.com/takashabe/wkit/main/install.sh | bash -s -- --download-only
+
+# Install only binary (skip Fish integration)
+curl -sSL https://raw.githubusercontent.com/takashabe/wkit/main/install.sh | bash -s -- --binary-only
+
+# Install only Fish integration (assume binary exists)
+curl -sSL https://raw.githubusercontent.com/takashabe/wkit/main/install.sh | bash -s -- --fish-only
+```
 
 ## Usage
 

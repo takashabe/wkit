@@ -99,6 +99,16 @@ impl WorktreeManager {
             // Use -b flag to create new branch
             cmd.arg("-b").arg(branch).arg(&target_path);
         } else {
+            format!("../{}", branch)
+        };
+
+        // Check if branch exists
+        let branch_exists = self.branch_exists(branch)?;
+        
+        if !branch_exists {
+            // Use -b flag to create new branch
+            cmd.arg("-b").arg(branch).arg(&target_path);
+        } else {
             cmd.arg(&target_path).arg(branch);
         }
 

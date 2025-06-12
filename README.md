@@ -1,105 +1,111 @@
-# wkit - Convenient Git Worktree Management Toolkit
+# wkit
 
-A Fish-friendly command-line tool for managing Git worktrees with enhanced productivity features.
+[![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Rust](https://img.shields.io/badge/rust-stable-orange.svg)](https://www.rust-lang.org/)
 
-## Features
+A powerful, Fish-friendly command-line tool for convenient Git worktree management with enhanced productivity features.
 
-- 🌳 **Easy worktree management** - Create, list, remove, and switch between worktrees
-- ⚙️ **Flexible configuration** - Local and global settings with `.wkit.toml`
-- 🐟 **Fish shell integration** - Tab completion, aliases, and prompt integration
-- 🔍 **Smart worktree detection** - Find worktrees by branch name or path
-- 📊 **Status overview** - See worktree status and git information at a glance
+## ✨ Features
 
-## Installation
+- 🌳 **Easy worktree management** - Create, list, remove, and switch between worktrees effortlessly
+- ⚙️ **Flexible configuration** - Local and global settings with hierarchical `.wkit.toml` configuration
+- 🐟 **Rich Fish shell integration** - Tab completion, aliases, prompt integration, and enhanced functions
+- 🔍 **Smart worktree detection** - Find worktrees by branch name or path with intelligent matching
+- 📊 **Comprehensive status overview** - See worktree status and git information at a glance
+- 🎯 **Z-style navigation** - Quick directory jumping with frecency-based worktree navigation (planned)
 
-### 🚀 Quick Install (Recommended)
+## 🚀 Installation
+
+### Quick Install (Recommended)
 
 ```bash
-# Clone and run automatic installer
+# Clone and install in one step
 git clone https://github.com/takashabe/wkit.git
 cd wkit
 ./install.sh
 ```
 
-This will:
-- Build the binary from source
-- Install to `/usr/local/bin/`
-- Set up Fish shell integration with tab completion and aliases
-- Create default configuration
+**What this does:**
+- ✅ Builds the binary from source using Cargo
+- ✅ Installs to `/usr/local/bin/` (requires sudo)
+- ✅ Sets up Fish shell integration with tab completion
+- ✅ Creates default configuration files
 
-### 📦 Manual Installation
+### Alternative Installation Methods
 
-#### Build from Source
+#### 📦 Using Fisher (Fish Package Manager)
 
 ```bash
-# Clone the repository
-git clone https://github.com/takashabe/wkit.git
-cd wkit
-
-# Build the binary
-cargo build --release
-
-# Install to system PATH
-sudo cp target/release/wkit /usr/local/bin/
-
-# Install Fish integration (optional but recommended)
-./install.fish
-```
-
-#### Fish Shell Integration Only
-
-If you already have wkit installed and just want Fish integration:
-
-**Option 1: Using Fisher (Recommended)**
-```bash
+# Install Fish integration only (binary must exist)
 fisher install takashabe/wkit
 ```
 
-**Option 2: Manual Installation**
+#### 🔨 Manual Build & Install
+
 ```bash
+# 1. Clone the repository
 git clone https://github.com/takashabe/wkit.git
 cd wkit
+
+# 2. Build with Cargo
+cargo build --release
+
+# 3. Install binary (choose one)
+sudo cp target/release/wkit /usr/local/bin/        # System-wide
+cp target/release/wkit ~/.local/bin/               # User-only
+
+# 4. Install Fish integration (optional)
 ./install.fish
 ```
 
-### 🔧 Installation Options
-
-The installation script supports various options:
+#### ⚙️ Installation Options
 
 ```bash
-# Install only binary (skip Fish integration)
-./install.sh --binary-only
-
-# Install only Fish integration (assume binary exists)
-./install.sh --fish-only
-
-# Show all available options
-./install.sh --help
+./install.sh --binary-only     # Skip Fish integration
+./install.sh --fish-only       # Fish integration only
+./install.sh --help           # Show all options
 ```
 
 ### 📋 Requirements
 
-- **Rust toolchain** - Install from [rustup.rs](https://rustup.rs/)
-- **Git** - For cloning the repository
-- **Fish shell** - Optional, for enhanced shell integration
+| Component | Required | Notes |
+|-----------|----------|-------|
+| **Rust toolchain** | ✅ Yes | Install from [rustup.rs](https://rustup.rs/) |
+| **Git** | ✅ Yes | For cloning and git worktree operations |
+| **Fish shell** | ⭐ Optional | Recommended for enhanced features |
+
+#### Minimum Versions
+- Rust: 1.70+ (2021 edition)
+- Fish: 3.0+ (for shell integration)
+- Git: 2.25+ (for modern worktree features)
 
 ## Usage
 
-### Basic Commands
+### 📖 Basic Commands
+
+| Command | Description | Example |
+|---------|-------------|---------|
+| `wkit list` | List all worktrees with status | `wkit list` |
+| `wkit add <branch>` | Create worktree from existing branch | `wkit add feature-login` |
+| `wkit add <branch> [path]` | Create worktree at custom path | `wkit add feature-login ../feature-login` |
+| `wkit remove <name>` | Remove a worktree | `wkit remove feature-login` |
+| `wkit switch <name>` | Switch to worktree (outputs path) | `wkit switch main` |
 
 ```bash
-# List all worktrees
+# List all worktrees with detailed status
 wkit list
 
-# Add a new worktree
-wkit add feature-branch
-wkit add feature-branch /custom/path
+# Create a new worktree from existing branch
+wkit add feature-login
 
-# Remove a worktree
-wkit remove feature-branch
+# Create worktree at custom location
+wkit add feature-login /path/to/custom/location
 
-# Switch to a worktree (outputs path for shell integration)
-wkit switch feature-branch
+# Remove worktree when done
+wkit remove feature-login
+
+# Switch to different worktree (use with cd)
+cd $(wkit switch main)
 ```
 
 ### Configuration Management
@@ -115,25 +121,32 @@ wkit config set default_worktree_path ../worktrees
 wkit config init
 ```
 
-### Fish Shell Integration
+### 🐟 Fish Shell Integration
 
-If you installed the Fish integration, you get these extra features:
+With Fish integration, you get enhanced productivity features:
 
+#### Quick Aliases
+| Alias | Command | Description |
+|-------|---------|-------------|
+| `ws <name>` | Switch & cd to worktree | `ws feature-login` |
+| `wl` | List worktrees | `wl` |
+| `wa <branch>` | Add new worktree | `wa new-feature` |
+| `wst` | Worktree status overview | `wst` |
+
+#### Advanced Functions
 ```bash
-# Quick aliases
-ws feature-branch    # Switch to worktree
-wl                   # List worktrees
-wa new-feature       # Add worktree
-wst                  # Worktree status overview
+# Create branch and worktree in one command
+wkit-add-quick new-feature main
 
-# Advanced functions
-wkit-add-quick new-feature main  # Create branch and worktree from main
-wkit-status                      # Detailed status of all worktrees
-wkit-cleanup                     # Remove worktrees with deleted branches
+# Detailed status of all worktrees
+wkit-status
+
+# Clean up worktrees with deleted branches
+wkit-cleanup
 
 # Prompt integration
-wkit_prompt_enable               # Show worktree info in prompt
-wkit_prompt_disable              # Remove worktree info from prompt
+wkit_prompt_enable    # Show worktree info in prompt
+wkit_prompt_disable   # Remove worktree info from prompt
 ```
 
 ### Tab Completion
@@ -232,13 +245,66 @@ RUST_LOG=debug cargo run -- list
 
 MIT License - see [LICENSE](LICENSE) file for details.
 
-## Roadmap
+## 🔧 Troubleshooting
+
+### Common Issues
+
+**Q: `wkit` command not found after installation**
+```bash
+# Ensure /usr/local/bin is in your PATH
+echo $PATH | grep "/usr/local/bin"
+
+# If not, add it to your shell config
+echo 'set -gx PATH /usr/local/bin $PATH' >> ~/.config/fish/config.fish
+```
+
+**Q: Fish integration not working**
+```bash
+# Verify Fisher installation
+fisher list | grep wkit
+
+# Or reinstall manually
+./install.fish
+```
+
+**Q: Tab completion not working**
+```bash
+# Reload Fish configuration
+source ~/.config/fish/config.fish
+
+# Or restart your terminal
+```
+
+**Q: Permission denied when installing**
+```bash
+# Use sudo for system installation
+sudo ./install.sh
+
+# Or install to user directory
+cargo install --path . --root ~/.local
+```
+
+### Fish Shell Requirements
+
+- Fish shell version 3.0 or higher
+- Fisher package manager (recommended but not required)
+
+### Debugging
+
+Enable debug logging to troubleshoot issues:
+```bash
+RUST_LOG=debug wkit list
+```
+
+## 🗺️ Roadmap
 
 - [x] Basic worktree management
-- [x] Fish shell integration
+- [x] Fish shell integration  
 - [x] Configuration management
-- [ ] Z command integration
+- [x] Tab completion and aliases
+- [ ] Z command integration (frecency-based navigation)
 - [ ] Performance optimizations
 - [ ] Additional shell support (bash, zsh)
 - [ ] Worktree templates
 - [ ] Git hooks integration
+- [ ] Interactive mode for worktree selection

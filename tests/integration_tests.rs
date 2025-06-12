@@ -49,3 +49,33 @@ fn test_switch_nonexistent_worktree() {
         .failure()
         .stderr(predicates::str::contains("Worktree 'nonexistent' not found"));
 }
+
+#[test]
+fn test_z_help() {
+    let mut cmd = Command::cargo_bin("wkit").unwrap();
+    cmd.args(["z", "--help"]);
+    cmd.assert()
+        .success()
+        .stdout(predicates::str::contains("Z-style frecency-based worktree jumping"))
+        .stdout(predicates::str::contains("--list"))
+        .stdout(predicates::str::contains("--clean"))
+        .stdout(predicates::str::contains("--add"));
+}
+
+#[test]
+fn test_z_add_current_directory() {
+    let mut cmd = Command::cargo_bin("wkit").unwrap();
+    cmd.args(["z", "--add"]);
+    cmd.assert()
+        .success()
+        .stdout(predicates::str::contains("Added current directory to z database"));
+}
+
+#[test]
+fn test_z_list_without_query() {
+    let mut cmd = Command::cargo_bin("wkit").unwrap();
+    cmd.args(["z"]);
+    cmd.assert()
+        .success()
+        .stdout(predicates::str::contains("Z database entries"));
+}

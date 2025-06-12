@@ -102,6 +102,7 @@ complete -c wkit -n '__fish_use_subcommand' -a 'add' -d 'Add a new worktree'
 complete -c wkit -n '__fish_use_subcommand' -a 'remove' -d 'Remove a worktree'
 complete -c wkit -n '__fish_use_subcommand' -a 'switch' -d 'Switch to a worktree'
 complete -c wkit -n '__fish_use_subcommand' -a 'config' -d 'Manage configuration'
+complete -c wkit -n '__fish_use_subcommand' -a 'z' -d 'Frecency-based worktree jumping'
 
 # Config subcommand completions
 complete -c wkit -n '__fish_seen_subcommand_from config; and __fish_use_subcommand' -a 'show' -d 'Show current configuration'
@@ -126,5 +127,46 @@ complete -c wkit -n '__fish_seen_subcommand_from add' -f -a "(git branch -a 2>/d
 # Path argument for add command (as second argument)
 complete -c wkit -n '__fish_seen_subcommand_from add; and test (count (commandline -opc)) -eq 3' -f -a "(__fish_complete_directories)"
 
+# Z command options
+complete -c wkit -n '__fish_seen_subcommand_from z' -s l -l list -d 'List all matches instead of jumping'
+complete -c wkit -n '__fish_seen_subcommand_from z' -s c -l clean -d 'Clean up non-existent entries'
+complete -c wkit -n '__fish_seen_subcommand_from z' -s a -l add -d 'Add current directory to z database'
+
+# Z command completions for wz function
+complete -c wz -f -a "(wkit z --list 2>/dev/null | tail -n +2 | awk '{print \$3}' | xargs -I {} basename {} 2>/dev/null)"
+
+# Z-style jumping function
+function wz -d "Jump to worktree using frecency (z-style)"
+    if test (count $argv) -eq 0
+        wkit z
+        return
+    end
+    
+    set -l target_path (wkit z $argv)
+    set -l exit_code $status
+    
+    if test $exit_code -eq 0 -a -n "$target_path"
+        cd "$target_path"
+        echo "✓ Jumped to: "(basename "$target_path")" at $target_path"
+    else
+        return $exit_code
+    end
+end
+
+# Enhanced z function that integrates with wkit
+function z-wkit -d "Enhanced z function with wkit integration"
+    # If wkit z finds a match, use it; otherwise fall back to regular z
+    set -l wkit_result (wkit z $argv 2>/dev/null)
+    if test $status -eq 0 -a -n "$wkit_result"
+        cd "$wkit_result"
+        echo "✓ wkit: Jumped to "(basename "$wkit_result")
+    else
+        # Fall back to regular z command
+        command z $argv
+    end
+end
+
 # Abbreviations for common workflows
 abbr -a wsc 'wkit switch (wkit list | tail -n +3 | fzf | awk "{print \$2}")'
+abbr -a wzl 'wkit z --list'
+abbr -a wzc 'wkit z --clean'

@@ -210,10 +210,6 @@ impl WorktreeManager {
         })
     }
 
-    pub fn find_unnecessary_worktrees(&self) -> Result<Vec<(Worktree, String)>> {
-        self.find_unnecessary_worktrees_with_main("main")
-    }
-
     pub fn find_unnecessary_worktrees_with_main(&self, main_branch: &str) -> Result<Vec<(Worktree, String)>> {
         let worktrees = self.list_worktrees()?;
         let mut unnecessary = Vec::new();
@@ -249,10 +245,6 @@ impl WorktreeManager {
         Ok(unnecessary)
     }
 
-    fn is_branch_merged(&self, branch: &str) -> Result<bool> {
-        self.is_branch_merged_into(branch, "main")
-    }
-
     fn is_branch_merged_into(&self, branch: &str, main_branch: &str) -> Result<bool> {
         let output = Command::new("git")
             .args(["branch", "--merged", main_branch])
@@ -279,10 +271,6 @@ impl WorktreeManager {
 
         let stdout = String::from_utf8_lossy(&output.stdout);
         Ok(stdout.trim().is_empty())
-    }
-
-    pub fn sync_worktree(&self, worktree: &Worktree, use_rebase: bool) -> Result<()> {
-        self.sync_worktree_with_branch(worktree, "main", use_rebase)
     }
 
     pub fn sync_worktree_with_branch(&self, worktree: &Worktree, main_branch: &str, use_rebase: bool) -> Result<()> {

@@ -223,6 +223,11 @@ impl WorktreeManager {
                 continue;
             }
 
+            // Skip the main branch itself
+            if worktree.branch == main_branch {
+                continue;
+            }
+
             // Check if branch is merged into main
             if self.is_branch_merged_into(&worktree.branch, main_branch)? {
                 unnecessary.push((worktree.clone(), format!("Branch merged into {}", main_branch)));

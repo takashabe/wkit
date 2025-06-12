@@ -15,6 +15,16 @@ pub struct Config {
     pub default_sync_strategy: String,
     #[serde(default = "default_main_branch")]
     pub main_branch: String,
+    #[serde(default)]
+    pub copy_files: CopyFiles,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CopyFiles {
+    #[serde(default)]
+    pub enabled: bool,
+    #[serde(default = "default_copy_files")]
+    pub files: Vec<String>,
 }
 
 impl Default for Config {
@@ -25,6 +35,16 @@ impl Default for Config {
             z_integration: true,
             default_sync_strategy: default_sync_strategy(),
             main_branch: default_main_branch(),
+            copy_files: CopyFiles::default(),
+        }
+    }
+}
+
+impl Default for CopyFiles {
+    fn default() -> Self {
+        Self {
+            enabled: false,
+            files: default_copy_files(),
         }
     }
 }
@@ -39,6 +59,15 @@ fn default_sync_strategy() -> String {
 
 fn default_main_branch() -> String {
     "main".to_string()
+}
+
+fn default_copy_files() -> Vec<String> {
+    vec![
+        ".envrc".to_string(),
+        "compose.override.yaml".to_string(),
+        ".env.local".to_string(),
+        "config/local.yaml".to_string(),
+    ]
 }
 
 impl Config {
@@ -112,6 +141,42 @@ impl Config {
                 format!("{}/{}", base_path, branch)
             }
         }
+    }
+
+    pub fn copy_files_to_worktree(&self, source_dir: &Path, target_dir: &Path) -> Result<Vec<String>> {
+        if !self.copy_files.enabled {
+            return Ok(vec![]);
+        }
+
+        let mut copied_files = Vec::new();
+        
+        for file_path in &self.copy_files.files {
+            let source_file = source_dir.join(file_path);
+            let target_file = target_dir.join(file_path);
+
+            if !source_file.exists() {
+                continue;
+            }
+
+            // Create parent directories if needed
+            if let Some(parent) = target_file.parent() {
+                fs::create_dir_all(parent)
+                    .with_context(|| format!("Failed to create directory: {}", parent.display()))?;
+            }
+
+            // Skip if target file already exists
+            if target_file.exists() {
+                continue;
+            }
+
+            fs::copy(&source_file, &target_file)
+                .with_context(|| format!("Failed to copy {} to {}", 
+                    source_file.display(), target_file.display()))?;
+
+            copied_files.push(file_path.clone());
+        }
+
+        Ok(copied_files)
     }
 }
 

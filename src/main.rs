@@ -146,6 +146,23 @@ fn cmd_add(manager: &WorktreeManager, branch: &str, path: Option<&str>) -> Resul
     manager.add_worktree(branch, Some(&target_path))?;
     println!("✓ Created worktree for branch '{}' at '{}'", branch, target_path);
     
+    // Copy configured files to the new worktree
+    if config.copy_files.enabled {
+        let source_dir = std::env::current_dir()?;
+        let target_dir = std::path::Path::new(&target_path);
+        
+        match config.copy_files_to_worktree(&source_dir, target_dir) {
+            Ok(copied_files) => {
+                if !copied_files.is_empty() {
+                    println!("  Copied {} file(s): {}", copied_files.len(), copied_files.join(", "));
+                }
+            }
+            Err(e) => {
+                eprintln!("  Warning: Failed to copy some files: {}", e);
+            }
+        }
+    }
+    
     // Add to z database if z_integration is enabled
     if config.z_integration {
         let z_integration = ZIntegration::new();

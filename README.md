@@ -50,6 +50,12 @@ sudo cp target/release/wkit /usr/local/bin/
 
 If you already have wkit installed and just want Fish integration:
 
+**Option 1: Using Fisher (Recommended)**
+```bash
+fisher install takashabe/wkit
+```
+
+**Option 2: Manual Installation**
 ```bash
 git clone https://github.com/takashabe/wkit.git
 cd wkit

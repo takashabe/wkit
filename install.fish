@@ -116,6 +116,10 @@ end
 function show_usage
     print_step "Installation complete! Here's how to use wkit:"
     echo
+    echo "💡 Fish Integration:"
+    echo "  For easier Fish integration next time, consider using Fisher:"
+    echo "  fisher install takashabe/wkit"
+    echo
     echo "🎯 Basic Commands:"
     echo "  wkit list              - List all worktrees"
     echo "  wkit add <branch>      - Add new worktree"

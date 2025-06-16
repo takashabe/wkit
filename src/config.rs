@@ -50,7 +50,7 @@ impl Default for CopyFiles {
 }
 
 fn default_worktree_path() -> String {
-    ".wkit-worktrees".to_string()
+    ".git/.wkit-worktrees".to_string()
 }
 
 fn default_sync_strategy() -> String {
@@ -187,7 +187,7 @@ mod tests {
     #[test]
     fn test_default_config() {
         let config = Config::default();
-        assert_eq!(config.default_worktree_path, ".wkit-worktrees");
+        assert_eq!(config.default_worktree_path, ".git/.wkit-worktrees");
         assert!(!config.auto_cleanup);
         assert!(config.z_integration);
     }
@@ -203,7 +203,7 @@ mod tests {
     fn test_resolve_worktree_path_with_default_relative() {
         let config = Config::default();
         let result = config.resolve_worktree_path("feature", None);
-        assert_eq!(result, ".wkit-worktrees/feature");
+        assert_eq!(result, ".git/.wkit-worktrees/feature");
     }
 
     #[test]

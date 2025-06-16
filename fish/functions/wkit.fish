@@ -160,4 +160,31 @@ function wkit-add-auto -d "Add worktree with optional auto-switch"
     return $exit_code
 end
 
+# Checkout remote branch function with auto-switch capability
+function wkit-checkout -d "Checkout remote branch and create worktree"
+    if test (count $argv) -eq 0
+        echo "Error: Please specify a remote branch (e.g., origin/feature-branch)" >&2
+        return 1
+    end
+    
+    set -l wkit_output (wkit checkout $argv 2>&1)
+    set -l exit_code $status
+    
+    echo "$wkit_output"
+    
+    if test $exit_code -eq 0
+        # Extract the last word which should be the path
+        set -l words (echo "$wkit_output" | string split ' ')
+        set -l potential_path $words[-1]
+        
+        # If the last word looks like a path, switch to it
+        if test -d "$potential_path"
+            cd "$potential_path"
+            echo "✓ Automatically switched to: "(basename "$potential_path")" at $potential_path"
+        end
+    end
+    
+    return $exit_code
+end
+
 # Note: Abbreviations are handled by conf.d/wkit.fish

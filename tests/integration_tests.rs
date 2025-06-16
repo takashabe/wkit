@@ -89,3 +89,23 @@ fn test_add_help_contains_no_switch_flag() {
         .stdout(predicates::str::contains("--no-switch"))
         .stdout(predicates::str::contains("Skip automatic switching to new worktree"));
 }
+
+#[test]
+fn test_checkout_help() {
+    let mut cmd = Command::cargo_bin("wkit").unwrap();
+    cmd.args(["checkout", "--help"]);
+    cmd.assert()
+        .success()
+        .stdout(predicates::str::contains("Checkout a remote branch and create worktree"))
+        .stdout(predicates::str::contains("Remote branch name (e.g., origin/feature-branch)"))
+        .stdout(predicates::str::contains("--no-switch"));
+}
+
+#[test]
+fn test_checkout_invalid_remote_branch_format() {
+    let mut cmd = Command::cargo_bin("wkit").unwrap();
+    cmd.args(["checkout", "invalid-format"]);
+    cmd.assert()
+        .failure()
+        .stderr(predicates::str::contains("Invalid remote branch format"));
+}

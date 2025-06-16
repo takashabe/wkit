@@ -158,6 +158,49 @@ With Fish integration, you get comprehensive tab completion for:
 - Configuration keys for `config set`
 - File paths where appropriate
 
+### Custom Key Bindings
+
+For even faster workflow, you can add these suggested key bindings to your `~/.config/fish/functions/fish_user_key_bindings.fish`:
+
+```fish
+function fish_user_key_bindings
+    # wkit key bindings for fast worktree management
+    
+    # Ctrl+W: Quick worktree switcher with fzf
+    bind \cw '__wkit_switch_interactive'
+    
+    # Ctrl+Alt+W: List worktrees with preview
+    bind \e\cw '__wkit_list_interactive'
+    
+    # Ctrl+Alt+A: Add new worktree interactively
+    bind \e\ca '__wkit_add_interactive'
+    
+    # Ctrl+Alt+M: Quick switch to main/master
+    bind \e\cm '__wkit_switch_main'
+end
+
+# Helper functions for key bindings
+function __wkit_switch_interactive
+    set -l worktree (wkit list 2>/dev/null | tail -n +2 | fzf --prompt="Switch to worktree: ")
+    test -n "$worktree"; and wkit switch $worktree; and commandline -f repaint
+end
+
+function __wkit_list_interactive
+    wkit list; commandline -f repaint
+end
+
+function __wkit_add_interactive
+    echo -n "Branch name: "; read -l branch
+    test -n "$branch"; and wkit add $branch; and commandline -f repaint
+end
+
+function __wkit_switch_main
+    wkit switch main 2>/dev/null || wkit switch master; commandline -f repaint
+end
+```
+
+**Note:** These key bindings require `fzf` for the interactive features. Install with your package manager or `fisher install PatrickF1/fzf.fish`.
+
 ## Configuration
 
 wkit supports both local (`.wkit.toml`) and global (`~/.config/wkit/config.toml`) configuration files.

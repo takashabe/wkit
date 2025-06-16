@@ -213,6 +213,12 @@ impl WorktreeManager {
         let worktrees = self.list_worktrees()?;
         let mut unnecessary = Vec::new();
 
+        // Get all merged branches in one command
+        let merged_branches = self.get_all_merged_branches(main_branch)?;
+        
+        // Get all remote branches in one command
+        let remote_branches = self.get_all_remote_branches()?;
+
         for worktree in worktrees {
             if worktree.is_bare {
                 continue;
@@ -224,7 +230,7 @@ impl WorktreeManager {
             }
 
             // Check if branch is merged into main
-            if self.is_branch_merged_into(&worktree.branch, main_branch)? {
+            if merged_branches.contains(&worktree.branch) {
                 unnecessary.push((worktree.clone(), format!("Branch merged into {}", main_branch)));
                 continue;
             }
@@ -236,7 +242,7 @@ impl WorktreeManager {
             }
 
             // Check if branch doesn't exist remotely
-            if self.is_branch_deleted_remotely(&worktree.branch)? {
+            if !remote_branches.contains(&worktree.branch) {
                 unnecessary.push((worktree.clone(), "Branch deleted remotely".to_string()));
             }
         }
@@ -244,33 +250,46 @@ impl WorktreeManager {
         Ok(unnecessary)
     }
 
-    fn is_branch_merged_into(&self, branch: &str, main_branch: &str) -> Result<bool> {
+    fn get_all_merged_branches(&self, main_branch: &str) -> Result<Vec<String>> {
         let output = Command::new("git")
             .args(["branch", "--merged", main_branch])
             .output()
             .context("Failed to check merged branches")?;
 
         if !output.status.success() {
-            return Ok(false);
+            return Ok(Vec::new());
         }
 
         let stdout = String::from_utf8_lossy(&output.stdout);
-        Ok(stdout.lines().any(|line| line.trim() == branch || line.trim() == &format!("* {}", branch)))
+        Ok(stdout
+            .lines()
+            .map(|line| line.trim().trim_start_matches("* ").to_string())
+            .collect())
     }
 
-    fn is_branch_deleted_remotely(&self, branch: &str) -> Result<bool> {
+    fn get_all_remote_branches(&self) -> Result<Vec<String>> {
         let output = Command::new("git")
-            .args(["ls-remote", "--heads", "origin", branch])
+            .args(["ls-remote", "--heads", "origin"])
             .output()
-            .context("Failed to check remote branch")?;
+            .context("Failed to list remote branches")?;
 
         if !output.status.success() {
-            return Ok(false);
+            return Ok(Vec::new());
         }
 
         let stdout = String::from_utf8_lossy(&output.stdout);
-        Ok(stdout.trim().is_empty())
+        Ok(stdout
+            .lines()
+            .filter_map(|line| {
+                // Format: <hash>\trefs/heads/<branch>
+                line.split('\t')
+                    .nth(1)
+                    .and_then(|ref_name| ref_name.strip_prefix("refs/heads/"))
+                    .map(|branch| branch.to_string())
+            })
+            .collect())
     }
+
 
     pub fn sync_worktree_with_branch(&self, worktree: &Worktree, main_branch: &str, use_rebase: bool) -> Result<()> {
         // First, fetch latest changes

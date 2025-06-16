@@ -160,10 +160,10 @@ function wkit-add-auto -d "Add worktree with optional auto-switch"
     return $exit_code
 end
 
-# Checkout remote branch function with auto-switch capability
-function wkit-checkout -d "Checkout remote branch and create worktree"
+# Checkout existing branch function with auto-switch capability
+function wkit-checkout -d "Checkout existing branch and create worktree"
     if test (count $argv) -eq 0
-        echo "Error: Please specify a remote branch (e.g., origin/feature-branch)" >&2
+        echo "Error: Please specify a branch (local or remote, e.g., feature-branch, origin/feature-branch)" >&2
         return 1
     end
     

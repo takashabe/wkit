@@ -26,11 +26,14 @@ function __wkit_complete_worktrees
     wkit list 2>/dev/null | tail -n +3 | awk '{print $2}' | grep -v '^$'
 end
 
-# Tab completion for remote branches
-function __wkit_complete_remote_branches
+# Tab completion for all branches (local and remote)
+function __wkit_complete_all_branches
+    # Local branches
+    git branch 2>/dev/null | sed 's/^[ \t*]*//' | grep -v '^$'
+    # Remote branches  
     git branch -r 2>/dev/null | sed 's/^[ \t]*//' | grep -v '^origin/HEAD' | grep -v '^$'
 end
 
 complete -c wkit -n '__fish_use_subcommand' -a 'list add remove switch checkout' -d 'wkit commands'
 complete -c wkit -n '__fish_seen_subcommand_from switch remove' -a '(__wkit_complete_worktrees)' -d 'Available worktrees'
-complete -c wkit -n '__fish_seen_subcommand_from checkout' -a '(__wkit_complete_remote_branches)' -d 'Available remote branches'
+complete -c wkit -n '__fish_seen_subcommand_from checkout' -a '(__wkit_complete_all_branches)' -d 'Available branches'

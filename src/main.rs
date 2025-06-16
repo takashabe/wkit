@@ -76,10 +76,10 @@ enum Commands {
         #[arg(short, long)]
         add: bool,
     },
-    /// Checkout a remote branch and create worktree
+    /// Checkout an existing branch and create worktree
     Checkout {
-        /// Remote branch name (e.g., origin/feature-branch)
-        remote_branch: String,
+        /// Branch name (local or remote, e.g., feature-branch, origin/feature-branch)
+        branch: String,
         /// Path for the worktree (optional)
         path: Option<String>,
         /// Skip automatic switching to new worktree
@@ -117,7 +117,7 @@ fn main() {
         Commands::Clean { force } => cmd_clean(&manager, force),
         Commands::Sync { worktree, rebase } => cmd_sync(&manager, worktree.as_deref(), rebase),
         Commands::Z { query, list, clean, add } => cmd_z(query.as_deref(), list, clean, add),
-        Commands::Checkout { remote_branch, path, no_switch } => cmd_checkout(&manager, &remote_branch, path.as_deref(), no_switch),
+        Commands::Checkout { branch, path, no_switch } => cmd_checkout(&manager, &branch, path.as_deref(), no_switch),
     };
 
     if let Err(e) = result {
@@ -457,24 +457,28 @@ fn cmd_z(query: Option<&str>, list: bool, clean: bool, add: bool) -> Result<()> 
     Ok(())
 }
 
-fn cmd_checkout(manager: &WorktreeManager, remote_branch: &str, path: Option<&str>, no_switch: bool) -> Result<()> {
+fn cmd_checkout(manager: &WorktreeManager, source_branch: &str, path: Option<&str>, no_switch: bool) -> Result<()> {
     let config = Config::load()?;
     
-    // Parse remote branch (e.g., "origin/feature-branch")
-    let parts: Vec<&str> = remote_branch.split('/').collect();
-    if parts.len() < 2 {
-        anyhow::bail!("Invalid remote branch format. Expected format: remote/branch (e.g., origin/feature-branch)");
-    }
-    
-    let _remote = parts[0];
-    let branch_name = parts[1..].join("/");
+    // Determine local branch name from source branch
+    let local_branch_name = if source_branch.contains('/') {
+        // For remote branches like "origin/feature-branch", extract "feature-branch"
+        let parts: Vec<&str> = source_branch.split('/').collect();
+        if parts.len() < 2 {
+            anyhow::bail!("Invalid branch format: {}", source_branch);
+        }
+        parts[1..].join("/")
+    } else {
+        // For local branches, use the same name with a suffix to avoid conflict
+        format!("{}-checkout", source_branch)
+    };
     
     // Resolve target path
-    let target_path = config.resolve_worktree_path(&branch_name, path);
+    let target_path = config.resolve_worktree_path(&local_branch_name, path);
     
-    // Create worktree from remote branch
-    manager.add_worktree_from_remote(remote_branch, &branch_name, Some(&target_path))?;
-    println!("✓ Created worktree for remote branch '{}' at '{}'", remote_branch, target_path);
+    // Create worktree from existing branch
+    manager.add_worktree_from_existing_branch(source_branch, &local_branch_name, Some(&target_path))?;
+    println!("✓ Created worktree for branch '{}' at '{}'", source_branch, target_path);
     
     // Copy configured files to the new worktree
     if config.copy_files.enabled {
@@ -496,7 +500,7 @@ fn cmd_checkout(manager: &WorktreeManager, remote_branch: &str, path: Option<&st
     // Add to z database if z_integration is enabled
     if config.z_integration {
         let z_integration = ZIntegration::new();
-        z_integration.create_smart_alias(&target_path, &branch_name)?;
+        z_integration.create_smart_alias(&target_path, &local_branch_name)?;
         println!("  Added to z database with smart alias");
     }
     

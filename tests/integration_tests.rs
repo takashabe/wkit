@@ -96,16 +96,16 @@ fn test_checkout_help() {
     cmd.args(["checkout", "--help"]);
     cmd.assert()
         .success()
-        .stdout(predicates::str::contains("Checkout a remote branch and create worktree"))
-        .stdout(predicates::str::contains("Remote branch name (e.g., origin/feature-branch)"))
+        .stdout(predicates::str::contains("Checkout an existing branch and create worktree"))
+        .stdout(predicates::str::contains("Branch name (local or remote"))
         .stdout(predicates::str::contains("--no-switch"));
 }
 
 #[test]
-fn test_checkout_invalid_remote_branch_format() {
+fn test_checkout_nonexistent_branch() {
     let mut cmd = Command::cargo_bin("wkit").unwrap();
-    cmd.args(["checkout", "invalid-format"]);
+    cmd.args(["checkout", "nonexistent-branch"]);
     cmd.assert()
         .failure()
-        .stderr(predicates::str::contains("Invalid remote branch format"));
+        .stderr(predicates::str::contains("does not exist"));
 }

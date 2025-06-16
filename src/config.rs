@@ -72,6 +72,9 @@ fn default_copy_files() -> Vec<String> {
 
 impl Config {
     pub fn load() -> Result<Self> {
+        // レガシー設定のマイグレーションを実行
+        let _ = Self::migrate_legacy_config();
+
         // Try to load from local config first, then global config
         if let Ok(config) = Self::load_from_path(".wkit.toml") {
             return Ok(config);
@@ -90,10 +93,10 @@ impl Config {
     fn load_from_path<P: AsRef<Path>>(path: P) -> Result<Self> {
         let content = fs::read_to_string(path.as_ref())
             .with_context(|| format!("Failed to read config file: {}", path.as_ref().display()))?;
-        
+
         let config: Self = toml::from_str(&content)
             .context("Failed to parse config file")?;
-        
+
         Ok(config)
     }
 
@@ -126,7 +129,50 @@ impl Config {
     }
 
     fn global_config_path() -> Option<PathBuf> {
-        dirs::config_dir().map(|dir| dir.join("wkit").join("config.toml"))
+        // XDG_CONFIG_HOME環境変数があれば優先、なければ~/.config
+        if let Ok(xdg_config_home) = std::env::var("XDG_CONFIG_HOME") {
+            Some(PathBuf::from(xdg_config_home).join("wkit").join("config.toml"))
+        } else {
+            dirs::config_dir().map(|dir| dir.join("wkit").join("config.toml"))
+        }
+    }
+
+    fn legacy_global_config_path() -> Option<PathBuf> {
+        // 以前のApplication Support形式のパス
+        dirs::data_dir().map(|dir| dir.join("wkit").join("config.toml"))
+    }
+
+    fn migrate_legacy_config() -> Result<()> {
+        let new_path = Self::global_config_path();
+        let legacy_path = Self::legacy_global_config_path();
+
+        if let (Some(new_path), Some(legacy_path)) = (new_path, legacy_path) {
+            // 新しいパスが存在せず、古いパスが存在する場合のみマイグレーション
+            if !new_path.exists() && legacy_path.exists() {
+                
+                // 新しいディレクトリを作成
+                if let Some(parent) = new_path.parent() {
+                    fs::create_dir_all(parent)
+                        .context("Failed to create new config directory")?;
+                }
+
+                // ファイルをコピー
+                fs::copy(&legacy_path, &new_path)
+                    .context("Failed to migrate config file")?;
+
+                // 古いファイルを削除
+                fs::remove_file(&legacy_path)
+                    .context("Failed to remove legacy config file")?;
+
+                // 古いディレクトリが空なら削除
+                if let Some(parent) = legacy_path.parent() {
+                    if parent.read_dir().map(|mut d| d.next().is_none()).unwrap_or(false) {
+                        let _ = fs::remove_dir(parent);
+                    }
+                }
+            }
+        }
+        Ok(())
     }
 
     pub fn resolve_worktree_path(&self, branch: &str, provided_path: Option<&str>) -> String {
@@ -149,7 +195,7 @@ impl Config {
         }
 
         let mut copied_files = Vec::new();
-        
+
         for file_path in &self.copy_files.files {
             let source_file = source_dir.join(file_path);
             let target_file = target_dir.join(file_path);
@@ -170,7 +216,7 @@ impl Config {
             }
 
             fs::copy(&source_file, &target_file)
-                .with_context(|| format!("Failed to copy {} to {}", 
+                .with_context(|| format!("Failed to copy {} to {}",
                     source_file.display(), target_file.display()))?;
 
             copied_files.push(file_path.clone());
@@ -234,5 +280,21 @@ z_integration = false
         assert_eq!(config.default_worktree_path, "/custom");
         assert!(config.auto_cleanup);
         assert!(!config.z_integration);
+    }
+
+    #[test]
+    fn test_global_config_path_with_xdg_config_home() {
+        std::env::set_var("XDG_CONFIG_HOME", "/custom/config");
+        let path = Config::global_config_path().unwrap();
+        assert_eq!(path, PathBuf::from("/custom/config/wkit/config.toml"));
+        std::env::remove_var("XDG_CONFIG_HOME");
+    }
+
+    #[test]
+    fn test_global_config_path_without_xdg_config_home() {
+        std::env::remove_var("XDG_CONFIG_HOME");
+        let path = Config::global_config_path();
+        assert!(path.is_some());
+        assert!(path.unwrap().to_string_lossy().contains("wkit/config.toml"));
     }
 }

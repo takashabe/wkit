@@ -113,11 +113,86 @@ impl WorktreeManager {
         Ok(())
     }
 
+    pub fn add_worktree_from_existing_branch(&self, source_branch: &str, local_branch_name: &str, path: Option<&str>) -> Result<()> {
+        // path should be provided by the caller (using config)
+        let target_path = path
+            .ok_or_else(|| anyhow::anyhow!("Path must be provided"))?
+            .to_string();
+
+        // Check if local branch already exists
+        if self.branch_exists(local_branch_name)? {
+            anyhow::bail!("Local branch '{}' already exists", local_branch_name);
+        }
+
+        // Determine if this is a remote or local branch
+        let is_remote_branch = source_branch.contains('/');
+        
+        if is_remote_branch {
+            // Handle remote branch
+            if !self.remote_branch_exists(source_branch)? {
+                anyhow::bail!("Remote branch '{}' does not exist", source_branch);
+            }
+
+            // Fetch latest changes from remote
+            let remote_parts: Vec<&str> = source_branch.split('/').collect();
+            if remote_parts.len() >= 2 {
+                let remote_name = remote_parts[0];
+                let output = Command::new("git")
+                    .args(["fetch", remote_name])
+                    .output()
+                    .context("Failed to fetch from remote")?;
+
+                if !output.status.success() {
+                    let stderr = String::from_utf8_lossy(&output.stderr);
+                    eprintln!("Warning: Failed to fetch from remote: {}", stderr);
+                }
+            }
+
+            // Create worktree with new local branch tracking the remote branch
+            let output = Command::new("git")
+                .args(["worktree", "add", "-b", local_branch_name, &target_path, source_branch])
+                .output()
+                .context("Failed to execute git worktree add")?;
+
+            if !output.status.success() {
+                let stderr = String::from_utf8_lossy(&output.stderr);
+                anyhow::bail!("git worktree add failed: {}", stderr);
+            }
+        } else {
+            // Handle local branch
+            if !self.branch_exists(source_branch)? {
+                anyhow::bail!("Local branch '{}' does not exist", source_branch);
+            }
+
+            // Create worktree with new local branch based on existing local branch
+            let output = Command::new("git")
+                .args(["worktree", "add", "-b", local_branch_name, &target_path, source_branch])
+                .output()
+                .context("Failed to execute git worktree add")?;
+
+            if !output.status.success() {
+                let stderr = String::from_utf8_lossy(&output.stderr);
+                anyhow::bail!("git worktree add failed: {}", stderr);
+            }
+        }
+
+        Ok(())
+    }
+
     fn branch_exists(&self, branch: &str) -> Result<bool> {
         let output = Command::new("git")
             .args(["show-ref", "--verify", "--quiet", &format!("refs/heads/{}", branch)])
             .output()
             .context("Failed to check if branch exists")?;
+
+        Ok(output.status.success())
+    }
+
+    fn remote_branch_exists(&self, remote_branch: &str) -> Result<bool> {
+        let output = Command::new("git")
+            .args(["show-ref", "--verify", "--quiet", &format!("refs/remotes/{}", remote_branch)])
+            .output()
+            .context("Failed to check if remote branch exists")?;
 
         Ok(output.status.success())
     }
@@ -389,5 +464,14 @@ bare
         assert_eq!(result.len(), 1);
         assert_eq!(result[0].branch, "");
         assert_eq!(result[0].head, "abcd1234");
+    }
+
+    #[test]
+    fn test_add_worktree_from_existing_branch_invalid_path() {
+        let manager = WorktreeManager::new();
+        let result = manager.add_worktree_from_existing_branch("origin/feature", "feature", None);
+        
+        assert!(result.is_err());
+        assert!(result.unwrap_err().to_string().contains("Path must be provided"));
     }
 }

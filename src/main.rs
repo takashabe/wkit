@@ -76,6 +76,16 @@ enum Commands {
         #[arg(short, long)]
         add: bool,
     },
+    /// Checkout an existing branch and create worktree
+    Checkout {
+        /// Branch name (local or remote, e.g., feature-branch, origin/feature-branch)
+        branch: String,
+        /// Path for the worktree (optional)
+        path: Option<String>,
+        /// Skip automatic switching to new worktree
+        #[arg(long)]
+        no_switch: bool,
+    },
 }
 
 #[derive(Subcommand)]
@@ -107,6 +117,7 @@ fn main() {
         Commands::Clean { force } => cmd_clean(&manager, force),
         Commands::Sync { worktree, rebase } => cmd_sync(&manager, worktree.as_deref(), rebase),
         Commands::Z { query, list, clean, add } => cmd_z(query.as_deref(), list, clean, add),
+        Commands::Checkout { branch, path, no_switch } => cmd_checkout(&manager, &branch, path.as_deref(), no_switch),
     };
 
     if let Err(e) = result {
@@ -441,6 +452,61 @@ fn cmd_z(query: Option<&str>, list: bool, clean: bool, add: bool) -> Result<()> 
                 println!("{:2}: {:8.2} {}", i + 1, score, entry.path.display());
             }
         }
+    }
+    
+    Ok(())
+}
+
+fn cmd_checkout(manager: &WorktreeManager, source_branch: &str, path: Option<&str>, no_switch: bool) -> Result<()> {
+    let config = Config::load()?;
+    
+    // Determine local branch name from source branch
+    let local_branch_name = if source_branch.contains('/') {
+        // For remote branches like "origin/feature-branch", extract "feature-branch"
+        let parts: Vec<&str> = source_branch.split('/').collect();
+        if parts.len() < 2 {
+            anyhow::bail!("Invalid branch format: {}", source_branch);
+        }
+        parts[1..].join("/")
+    } else {
+        // For local branches, use the same name with a suffix to avoid conflict
+        format!("{}-checkout", source_branch)
+    };
+    
+    // Resolve target path
+    let target_path = config.resolve_worktree_path(&local_branch_name, path);
+    
+    // Create worktree from existing branch
+    manager.add_worktree_from_existing_branch(source_branch, &local_branch_name, Some(&target_path))?;
+    println!("✓ Created worktree for branch '{}' at '{}'", source_branch, target_path);
+    
+    // Copy configured files to the new worktree
+    if config.copy_files.enabled {
+        let source_dir = std::env::current_dir()?;
+        let target_dir = std::path::Path::new(&target_path);
+        
+        match config.copy_files_to_worktree(&source_dir, target_dir) {
+            Ok(copied_files) => {
+                if !copied_files.is_empty() {
+                    println!("  Copied {} file(s): {}", copied_files.len(), copied_files.join(", "));
+                }
+            }
+            Err(e) => {
+                eprintln!("  Warning: Failed to copy some files: {}", e);
+            }
+        }
+    }
+    
+    // Add to z database if z_integration is enabled
+    if config.z_integration {
+        let z_integration = ZIntegration::new();
+        z_integration.create_smart_alias(&target_path, &local_branch_name)?;
+        println!("  Added to z database with smart alias");
+    }
+    
+    // Auto-switch to new worktree unless --no-switch is specified
+    if !no_switch {
+        println!("{}", target_path);
     }
     
     Ok(())

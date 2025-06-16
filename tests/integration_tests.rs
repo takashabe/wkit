@@ -89,3 +89,23 @@ fn test_add_help_contains_no_switch_flag() {
         .stdout(predicates::str::contains("--no-switch"))
         .stdout(predicates::str::contains("Skip automatic switching to new worktree"));
 }
+
+#[test]
+fn test_checkout_help() {
+    let mut cmd = Command::cargo_bin("wkit").unwrap();
+    cmd.args(["checkout", "--help"]);
+    cmd.assert()
+        .success()
+        .stdout(predicates::str::contains("Checkout an existing branch and create worktree"))
+        .stdout(predicates::str::contains("Branch name (local or remote"))
+        .stdout(predicates::str::contains("--no-switch"));
+}
+
+#[test]
+fn test_checkout_nonexistent_branch() {
+    let mut cmd = Command::cargo_bin("wkit").unwrap();
+    cmd.args(["checkout", "nonexistent-branch"]);
+    cmd.assert()
+        .failure()
+        .stderr(predicates::str::contains("does not exist"));
+}

@@ -72,22 +72,31 @@ fn default_copy_files() -> Vec<String> {
 
 impl Config {
     pub fn load() -> Result<Self> {
+        let (config, _) = Self::load_with_source()?;
+        Ok(config)
+    }
+
+    pub fn load_with_source() -> Result<(Self, Option<PathBuf>)> {
         // レガシー設定のマイグレーションを実行
         let _ = Self::migrate_legacy_config();
 
         // Try to load from local config first, then global config
-        if let Ok(config) = Self::load_from_path(".wkit.toml") {
-            return Ok(config);
+        let local_path = Path::new(".wkit.toml");
+        if local_path.exists() {
+            let config = Self::load_from_path(local_path)?;
+            let absolute_path = std::env::current_dir()?.join(local_path);
+            return Ok((config, Some(absolute_path)));
         }
 
         if let Some(global_path) = Self::global_config_path() {
             if global_path.exists() {
-                return Self::load_from_path(&global_path);
+                let config = Self::load_from_path(&global_path)?;
+                return Ok((config, Some(global_path)));
             }
         }
 
         // Return default config if no config files exist
-        Ok(Self::default())
+        Ok((Self::default(), None))
     }
 
     fn load_from_path<P: AsRef<Path>>(path: P) -> Result<Self> {

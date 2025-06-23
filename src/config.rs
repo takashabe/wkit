@@ -205,33 +205,86 @@ impl Config {
 
         let mut copied_files = Vec::new();
 
-        for file_path in &self.copy_files.files {
-            let source_file = source_dir.join(file_path);
-            let target_file = target_dir.join(file_path);
+        for file_pattern in &self.copy_files.files {
+            // Check if it's a relative path or just a filename
+            if file_pattern.contains('/') || file_pattern.contains('\\') {
+                // It's a path, use the existing logic
+                let source_file = source_dir.join(file_pattern);
+                let target_file = target_dir.join(file_pattern);
 
-            if !source_file.exists() {
-                continue;
+                if source_file.exists() {
+                    self.copy_single_file(&source_file, &target_file, file_pattern, &mut copied_files)?;
+                }
+            } else {
+                // It's just a filename, search for all matching files in the repository
+                let found_files = self.find_files_by_name(source_dir, file_pattern)?;
+                for relative_path in found_files {
+                    let source_file = source_dir.join(&relative_path);
+                    let target_file = target_dir.join(&relative_path);
+                    
+                    self.copy_single_file(&source_file, &target_file, &relative_path, &mut copied_files)?;
+                }
             }
-
-            // Create parent directories if needed
-            if let Some(parent) = target_file.parent() {
-                fs::create_dir_all(parent)
-                    .with_context(|| format!("Failed to create directory: {}", parent.display()))?;
-            }
-
-            // Skip if target file already exists
-            if target_file.exists() {
-                continue;
-            }
-
-            fs::copy(&source_file, &target_file)
-                .with_context(|| format!("Failed to copy {} to {}",
-                    source_file.display(), target_file.display()))?;
-
-            copied_files.push(file_path.clone());
         }
 
         Ok(copied_files)
+    }
+
+    fn copy_single_file(&self, source_file: &Path, target_file: &Path, relative_path: &str, copied_files: &mut Vec<String>) -> Result<()> {
+        // Create parent directories if needed
+        if let Some(parent) = target_file.parent() {
+            fs::create_dir_all(parent)
+                .with_context(|| format!("Failed to create directory: {}", parent.display()))?;
+        }
+
+        // Skip if target file already exists
+        if target_file.exists() {
+            return Ok(());
+        }
+
+        fs::copy(source_file, target_file)
+            .with_context(|| format!("Failed to copy {} to {}",
+                source_file.display(), target_file.display()))?;
+
+        copied_files.push(relative_path.to_string());
+        Ok(())
+    }
+
+    fn find_files_by_name(&self, source_dir: &Path, filename: &str) -> Result<Vec<String>> {
+        let mut found_files = Vec::new();
+        self.walk_directory(source_dir, source_dir, filename, &mut found_files)?;
+        Ok(found_files)
+    }
+
+    fn walk_directory(&self, base_dir: &Path, current_dir: &Path, filename: &str, found_files: &mut Vec<String>) -> Result<()> {
+        let entries = fs::read_dir(current_dir)
+            .with_context(|| format!("Failed to read directory: {}", current_dir.display()))?;
+
+        for entry in entries {
+            let entry = entry?;
+            let path = entry.path();
+            
+            // Skip .git directory to avoid copying from other worktrees
+            if path.file_name().map_or(false, |name| name == ".git") {
+                continue;
+            }
+
+            if path.is_file() {
+                if let Some(file_name) = path.file_name() {
+                    if file_name == filename {
+                        // Calculate relative path from base directory
+                        let relative_path = path.strip_prefix(base_dir)
+                            .with_context(|| format!("Failed to get relative path for: {}", path.display()))?;
+                        found_files.push(relative_path.to_string_lossy().to_string());
+                    }
+                }
+            } else if path.is_dir() {
+                // Recursively search subdirectories
+                self.walk_directory(base_dir, &path, filename, found_files)?;
+            }
+        }
+        
+        Ok(())
     }
 }
 
@@ -305,5 +358,42 @@ z_integration = false
         let path = Config::global_config_path();
         assert!(path.is_some());
         assert!(path.unwrap().to_string_lossy().contains("wkit/config.toml"));
+    }
+
+    #[test]
+    fn test_copy_files_disabled() {
+        let config = Config::default();
+        let result = config.copy_files_to_worktree(Path::new("/source"), Path::new("/target"));
+        assert!(result.is_ok());
+        assert!(result.unwrap().is_empty());
+    }
+
+    #[test]
+    fn test_find_files_by_name_logic() {
+        use std::fs;
+        use std::path::PathBuf;
+        
+        let temp_dir = std::env::temp_dir().join("wkit_test");
+        let _ = fs::remove_dir_all(&temp_dir);
+        fs::create_dir_all(&temp_dir).unwrap();
+        
+        // Create test files
+        fs::create_dir_all(temp_dir.join("src")).unwrap();
+        fs::create_dir_all(temp_dir.join("config")).unwrap();
+        fs::write(temp_dir.join(".envrc"), "root envrc").unwrap();
+        fs::write(temp_dir.join("src/.envrc"), "src envrc").unwrap();
+        fs::write(temp_dir.join("config/.envrc"), "config envrc").unwrap();
+        
+        let mut config = Config::default();
+        config.copy_files.enabled = true;
+        
+        let found_files = config.find_files_by_name(&temp_dir, ".envrc").unwrap();
+        assert_eq!(found_files.len(), 3);
+        assert!(found_files.contains(&".envrc".to_string()));
+        assert!(found_files.contains(&"src/.envrc".to_string()));
+        assert!(found_files.contains(&"config/.envrc".to_string()));
+        
+        // Clean up
+        let _ = fs::remove_dir_all(&temp_dir);
     }
 }

@@ -232,13 +232,24 @@ fn cmd_switch(manager: &WorktreeManager, worktree: &str) -> Result<()> {
 fn cmd_config(config_cmd: ConfigCommands) -> Result<()> {
     match config_cmd {
         ConfigCommands::Show => {
-            let config = Config::load()?;
+            let (config, source) = Config::load_with_source()?;
+            
+            if let Some(path) = source {
+                println!("Configuration loaded from: {}", path.display());
+            } else {
+                println!("Configuration: Using default values (no config file found)");
+            }
+            println!();
+            
             println!("Current configuration:");
             println!("  default_worktree_path: {}", config.default_worktree_path);
             println!("  auto_cleanup: {}", config.auto_cleanup);
             println!("  z_integration: {}", config.z_integration);
             println!("  default_sync_strategy: {}", config.default_sync_strategy);
             println!("  main_branch: {}", config.main_branch);
+            println!("  copy_files:");
+            println!("    enabled: {}", config.copy_files.enabled);
+            println!("    files: {:?}", config.copy_files.files);
         }
         ConfigCommands::Set { key, value } => {
             let mut config = Config::load()?;

@@ -83,7 +83,7 @@ impl WorktreeManager {
         Ok(worktrees)
     }
 
-    pub fn add_worktree(&self, branch: &str, path: Option<&str>) -> Result<()> {
+    pub fn add_worktree(&self, branch: &str, path: Option<&str>, main_branch: &str) -> Result<()> {
         // path should be provided by the caller (using config)
         let target_path = path
             .ok_or_else(|| anyhow::anyhow!("Path must be provided"))?
@@ -96,8 +96,9 @@ impl WorktreeManager {
         let branch_exists = self.branch_exists(branch)?;
         
         if !branch_exists {
-            // Use -b flag to create new branch
-            cmd.arg("-b").arg(branch).arg(&target_path);
+            // Use -b flag to create new branch from origin/<main_branch>
+            let base_branch = format!("origin/{}", main_branch);
+            cmd.arg("-b").arg(branch).arg(&target_path).arg(&base_branch);
         } else {
             cmd.arg(&target_path).arg(branch);
         }

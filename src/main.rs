@@ -157,7 +157,7 @@ fn cmd_add(manager: &WorktreeManager, branch: &str, path: Option<&str>, no_switc
     let config = Config::load()?;
     let target_path = config.resolve_worktree_path(branch, path);
     
-    manager.add_worktree(branch, Some(&target_path))?;
+    manager.add_worktree(branch, Some(&target_path), &config.main_branch)?;
     println!("✓ Created worktree for branch '{}' at '{}'", branch, target_path);
     
     // Copy configured files to the new worktree

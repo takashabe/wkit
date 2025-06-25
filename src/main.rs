@@ -140,7 +140,14 @@ fn cmd_list(manager: &WorktreeManager) -> Result<()> {
     
     for wt in worktrees {
         let relative_path = wt.path.strip_prefix(&repo_root)
-            .map(|p| p.to_string_lossy().into_owned())
+            .map(|p| {
+                let p_str = p.to_string_lossy().into_owned();
+                if p_str.is_empty() {
+                    "(root)".to_string()
+                } else {
+                    p_str
+                }
+            })
             .unwrap_or_else(|_| wt.path.to_string_lossy().into_owned());
         
         let head_short = if wt.head.len() > 10 {
@@ -312,7 +319,14 @@ fn cmd_status(manager: &WorktreeManager) -> Result<()> {
     
     for wt in worktrees {
         let relative_path = wt.path.strip_prefix(&repo_root)
-            .map(|p| p.to_string_lossy().into_owned())
+            .map(|p| {
+                let p_str = p.to_string_lossy().into_owned();
+                if p_str.is_empty() {
+                    "(root)".to_string()
+                } else {
+                    p_str
+                }
+            })
             .unwrap_or_else(|_| wt.path.to_string_lossy().into_owned());
         
         let head_short = if wt.head.len() > 10 {

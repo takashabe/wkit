@@ -29,6 +29,23 @@ impl WorktreeManager {
         Self
     }
 
+    pub fn get_repository_root(&self) -> Result<PathBuf> {
+        let output = Command::new("git")
+            .args(["rev-parse", "--show-toplevel"])
+            .output()
+            .context("Failed to execute git rev-parse")?;
+
+        if !output.status.success() {
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            anyhow::bail!("git rev-parse failed: {}", stderr);
+        }
+
+        let path = String::from_utf8_lossy(&output.stdout)
+            .trim()
+            .to_string();
+        Ok(PathBuf::from(path))
+    }
+
     pub fn list_worktrees(&self) -> Result<Vec<Worktree>> {
         let output = Command::new("git")
             .args(["worktree", "list", "--porcelain"])

@@ -133,11 +133,16 @@ fn cmd_list(manager: &WorktreeManager) -> Result<()> {
         return Ok(());
     }
 
+    let repo_root = manager.get_repository_root()?;
+
     println!("{:<30} {:<20} {:<12}", "PATH", "BRANCH", "HEAD");
     println!("{}", "-".repeat(65));
     
     for wt in worktrees {
-        let path_str = wt.path.to_string_lossy();
+        let relative_path = wt.path.strip_prefix(&repo_root)
+            .map(|p| p.to_string_lossy().into_owned())
+            .unwrap_or_else(|_| wt.path.to_string_lossy().into_owned());
+        
         let head_short = if wt.head.len() > 10 {
             &wt.head[..10]
         } else {
@@ -145,7 +150,7 @@ fn cmd_list(manager: &WorktreeManager) -> Result<()> {
         };
         
         println!("{:<30} {:<20} {:<12}", 
-            path_str, 
+            relative_path, 
             wt.branch, 
             head_short
         );
@@ -300,11 +305,16 @@ fn cmd_status(manager: &WorktreeManager) -> Result<()> {
         return Ok(());
     }
 
+    let repo_root = manager.get_repository_root()?;
+
     println!("{:<30} {:<20} {:<12} {:<15}", "PATH", "BRANCH", "HEAD", "STATUS");
     println!("{}", "-".repeat(80));
     
     for wt in worktrees {
-        let path_str = wt.path.to_string_lossy();
+        let relative_path = wt.path.strip_prefix(&repo_root)
+            .map(|p| p.to_string_lossy().into_owned())
+            .unwrap_or_else(|_| wt.path.to_string_lossy().into_owned());
+        
         let head_short = if wt.head.len() > 10 {
             &wt.head[..10]
         } else {
@@ -319,7 +329,7 @@ fn cmd_status(manager: &WorktreeManager) -> Result<()> {
         };
         
         println!("{:<30} {:<20} {:<12} {:<15}", 
-            path_str, 
+            relative_path, 
             wt.branch, 
             head_short,
             &status_str

@@ -184,14 +184,15 @@ impl Config {
         Ok(())
     }
 
-    pub fn resolve_worktree_path(&self, branch: &str, provided_path: Option<&str>) -> String {
+    pub fn resolve_worktree_path(&self, branch: &str, provided_path: Option<&str>, repository_root: &Path) -> String {
         match provided_path {
             Some(path) => path.to_string(),
             None => {
                 let base_path = if self.default_worktree_path.starts_with('/') {
                     self.default_worktree_path.clone()
                 } else {
-                    self.default_worktree_path.clone()
+                    // For relative paths, resolve them relative to the repository root
+                    repository_root.join(&self.default_worktree_path).to_string_lossy().to_string()
                 };
                 format!("{}/{}", base_path, branch)
             }
@@ -303,22 +304,25 @@ mod tests {
     #[test]
     fn test_resolve_worktree_path_with_provided_path() {
         let config = Config::default();
-        let result = config.resolve_worktree_path("feature", Some("/custom/path"));
+        let repo_root = Path::new("/repo/root");
+        let result = config.resolve_worktree_path("feature", Some("/custom/path"), repo_root);
         assert_eq!(result, "/custom/path");
     }
 
     #[test]
     fn test_resolve_worktree_path_with_default_relative() {
         let config = Config::default();
-        let result = config.resolve_worktree_path("feature", None);
-        assert_eq!(result, ".git/.wkit-worktrees/feature");
+        let repo_root = Path::new("/repo/root");
+        let result = config.resolve_worktree_path("feature", None, repo_root);
+        assert_eq!(result, "/repo/root/.git/.wkit-worktrees/feature");
     }
 
     #[test]
     fn test_resolve_worktree_path_with_absolute_default() {
         let mut config = Config::default();
         config.default_worktree_path = "/absolute/path".to_string();
-        let result = config.resolve_worktree_path("feature", None);
+        let repo_root = Path::new("/repo/root");
+        let result = config.resolve_worktree_path("feature", None, repo_root);
         assert_eq!(result, "/absolute/path/feature");
     }
 

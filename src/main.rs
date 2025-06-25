@@ -167,7 +167,8 @@ fn cmd_list(manager: &WorktreeManager) -> Result<()> {
 
 fn cmd_add(manager: &WorktreeManager, branch: &str, path: Option<&str>, no_switch: bool) -> Result<()> {
     let config = Config::load()?;
-    let target_path = config.resolve_worktree_path(branch, path);
+    let repository_root = manager.get_repository_root()?;
+    let target_path = config.resolve_worktree_path(branch, path, &repository_root);
     
     manager.add_worktree(branch, Some(&target_path), &config.main_branch)?;
     println!("✓ Created worktree for branch '{}' at '{}'", branch, target_path);
@@ -509,7 +510,8 @@ fn cmd_checkout(manager: &WorktreeManager, source_branch: &str, path: Option<&st
     };
     
     // Resolve target path
-    let target_path = config.resolve_worktree_path(&local_branch_name, path);
+    let repository_root = manager.get_repository_root()?;
+    let target_path = config.resolve_worktree_path(&local_branch_name, path, &repository_root);
     
     // Create worktree from existing branch
     manager.add_worktree_from_existing_branch(source_branch, &local_branch_name, Some(&target_path))?;

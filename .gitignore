@@ -2,6 +2,10 @@
 target/
 Cargo.lock
 
+# Go
+wkit
+/wkit
+
 # Local configuration files
 .wkit.toml
 

@@ -79,8 +79,22 @@ func parseWorktreeList(output string) ([]Worktree, error) {
 
 // GetRepositoryRoot returns the absolute path to the repository root.
 func GetRepositoryRoot() (string, error) {
-	cmd := exec.Command("git", "rev-parse", "--show-toplevel")
+	// Get the common git directory first
+	cmd := exec.Command("git", "rev-parse", "--git-common-dir")
 	output, err := cmd.Output()
+	if err != nil {
+		return "", fmt.Errorf("failed to execute git rev-parse --git-common-dir: %w", err)
+	}
+	gitDir := strings.TrimSpace(string(output))
+	
+	// The repository root is the parent of .git directory
+	if strings.HasSuffix(gitDir, "/.git") {
+		return strings.TrimSuffix(gitDir, "/.git"), nil
+	}
+	
+	// Fallback to show-toplevel if not a standard .git directory
+	cmd = exec.Command("git", "rev-parse", "--show-toplevel")
+	output, err = cmd.Output()
 	if err != nil {
 		return "", fmt.Errorf("failed to execute git rev-parse --show-toplevel: %w", err)
 	}

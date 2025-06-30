@@ -42,12 +42,15 @@ func NewListCmd() *cobra.Command {
 
 			outputWorktrees := make([]outputWorktree, 0, len(worktrees))
 			for _, wt := range worktrees {
-				relativePath, err := filepath.Rel(repoRoot, wt.Path)
-				if err != nil {
-					relativePath = wt.Path // Fallback if relative path calculation fails
-				}
-				if relativePath == "." {
+				var relativePath string
+				if wt.Path == repoRoot {
 					relativePath = "(root)"
+				} else {
+					var err error
+					relativePath, err = filepath.Rel(repoRoot, wt.Path)
+					if err != nil {
+						relativePath = wt.Path // Fallback if relative path calculation fails
+					}
 				}
 				outputWorktrees = append(outputWorktrees, outputWorktree{
 					Path:   relativePath,

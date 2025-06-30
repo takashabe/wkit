@@ -11,7 +11,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Go CLI Core**: Main binary built with `cobra` for command parsing
 - **Configuration System**: TOML-based configuration with local (`.wkit.toml`) and global (`~/.config/wkit/config.toml`) precedence
 - **Worktree Management**: Git worktree wrapper with enhanced functionality in `internal/worktree/manager.go`
-- **Fish Integration**: Comprehensive shell integration with functions, aliases, tab completion, and prompt integration
+- **Structured Output**: Supports JSON output format for easy scripting and integration (e.g., `wkit list --format=json`)
+- **Fish Integration Examples**: Example functions and configurations in `examples/fish/` directory
 
 ## Development Commands
 
@@ -25,8 +26,8 @@ go test ./...
 # Install to system (after building)
 sudo cp wkit /usr/local/bin/
 
-# Install Fish integration
-./install.fish
+# Copy Fish integration examples (optional)
+cp examples/fish/functions/*.fish ~/.config/fish/functions/
 ```
 
 ## Module Structure
@@ -34,7 +35,8 @@ sudo cp wkit /usr/local/bin/
 - `main.go`: CLI command definitions and handlers using cobra
 - `internal/config/config.go`: Configuration management with TOML serialization/deserialization
 - `internal/worktree/manager.go`: Core Git worktree operations and management
-- `fish/`: Fish shell integration files (functions, completions, aliases)
+- `internal/cmd/`: Command implementations with JSON output support
+- `examples/fish/`: Fish shell integration examples (functions, completions, aliases)
 
 ## Configuration System
 
@@ -46,11 +48,11 @@ Uses a hierarchical configuration system:
 
 Configuration keys: `default_worktree_path`, `auto_cleanup`, `default_sync_strategy`, `main_branch`, `copy_files`
 
-## Fish Integration
+## Shell Integration
 
-The `fish/` directory contains comprehensive Fish shell integration:
+The `examples/fish/` directory contains example Fish shell integrations that users can customize:
 - Functions with tab completion for all commands
 - Aliases (`ws`, `wl`, `wa`, `wst`) for common operations
 - Prompt integration to show current worktree info
 - Smart worktree creation and management functions
-- Installation script (`install.fish`) for automated setup
+- Examples of using JSON output with tools like jq and fzf

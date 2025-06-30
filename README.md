@@ -1,9 +1,9 @@
 # wkit
 
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Rust](https://img.shields.io/badge/rust-stable-orange.svg)](https://www.rust-lang.org/)
+[![Go](https://img.shields.io/badge/go-1.21+-00ADD8.svg)](https://go.dev/)
 
-A Fish-friendly CLI tool for convenient Git worktree management.
+A CLI tool for convenient Git worktree management with Fish shell integration examples.
 
 ## Features
 
@@ -22,20 +22,21 @@ A Fish-friendly CLI tool for convenient Git worktree management.
 # Clone and build
 git clone https://github.com/takashabe/wkit.git
 cd wkit
-cargo build --release
+go build -o wkit .
 
 # Install binary
-sudo cp target/release/wkit /usr/local/bin/
-
-# Install Fish integration (optional)
-./install.fish
+sudo cp wkit /usr/local/bin/
 ```
+
+### Fish Shell Integration (Optional)
+
+See [examples/fish/](examples/fish/) for Fish shell integration examples that you can customize and add to your configuration.
 
 ### Requirements
 
-- Rust toolchain (1.70+)
+- Go (1.21+)
 - Git (2.25+)
-- Fish shell (3.0+) - optional but recommended
+- Fish shell (3.0+) - optional for shell integration examples
 
 ## Usage
 
@@ -87,21 +88,23 @@ wkit config set main_branch main
 wkit config init
 ```
 
-### Fish Shell Integration
+### Structured Output
 
-With Fish integration installed, you get:
+`wkit` supports JSON output for easy integration with scripts and tools:
 
-**Aliases:**
-- `ws <name>` - Switch to worktree
-- `wl` - List worktrees
-- `wa <branch>` - Add worktree
-- `wst` - Show status
+```bash
+# Get worktree list as JSON
+wkit list --format=json
+```
 
-**Functions:**
-- `wkit-add-quick` - Create branch and worktree
-- `wkit-status` - Detailed status view
-- `wkit-cleanup` - Clean up deleted branches
-- `wkit_prompt_enable/disable` - Toggle prompt integration
+### Fish Shell Integration Examples
+
+See [examples/fish/](examples/fish/) for Fish shell functions and integration examples including:
+
+- Fuzzy worktree switching with fzf
+- Custom aliases and functions
+- Prompt integration
+- JSON output parsing examples
 
 ## Configuration
 

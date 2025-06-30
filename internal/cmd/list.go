@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
 	"path/filepath"
 	"strings"
@@ -10,7 +11,9 @@ import (
 )
 
 func NewListCmd() *cobra.Command {
-	return &cobra.Command{
+	var format string
+	
+	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "List all worktrees",
 		Long:  `List all Git worktrees associated with the current repository.`,
@@ -30,9 +33,14 @@ func NewListCmd() *cobra.Command {
 				return fmt.Errorf("failed to get repository root: %w", err)
 			}
 
-			fmt.Printf("%-30s %-20s %-12s\n", "PATH", "BRANCH", "HEAD")
-			fmt.Println(strings.Repeat("-", 65))
+			// Convert absolute paths to relative paths for output
+			type outputWorktree struct {
+				Path   string `json:"path"`
+				Branch string `json:"branch"`
+				HEAD   string `json:"head"`
+			}
 
+			outputWorktrees := make([]outputWorktree, 0, len(worktrees))
 			for _, wt := range worktrees {
 				relativePath, err := filepath.Rel(repoRoot, wt.Path)
 				if err != nil {
@@ -41,9 +49,32 @@ func NewListCmd() *cobra.Command {
 				if relativePath == "." {
 					relativePath = "(root)"
 				}
-				fmt.Printf("%-30s %-20s %-12s\n", relativePath, wt.Branch, wt.HEAD)
+				outputWorktrees = append(outputWorktrees, outputWorktree{
+					Path:   relativePath,
+					Branch: wt.Branch,
+					HEAD:   wt.HEAD,
+				})
+			}
+
+			// Output based on format
+			if format == "json" {
+				encoder := json.NewEncoder(cmd.OutOrStdout())
+				encoder.SetIndent("", "  ")
+				return encoder.Encode(outputWorktrees)
+			}
+
+			// Default human-readable format
+			fmt.Printf("%-30s %-20s %-12s\n", "PATH", "BRANCH", "HEAD")
+			fmt.Println(strings.Repeat("-", 65))
+
+			for _, wt := range outputWorktrees {
+				fmt.Printf("%-30s %-20s %-12s\n", wt.Path, wt.Branch, wt.HEAD)
 			}
 			return nil
 		},
 	}
+
+	cmd.Flags().StringVar(&format, "format", "", "Output format (json)")
+
+	return cmd
 }

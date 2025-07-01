@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/spf13/cobra"
 	"wkit/internal/config"
@@ -49,6 +50,19 @@ func NewAddCmd() *cobra.Command {
 			}
 
 			fmt.Printf("✓ Created worktree for branch '%s' at '%s'\n", branch, worktreePath)
+
+			// Copy configured files if enabled
+			repoRoot, err := worktree.GetRepositoryRoot()
+			if err != nil {
+				return fmt.Errorf("failed to get repository root: %w", err)
+			}
+			
+			copiedFiles, err := cfg.CopyFilesToWorktree(repoRoot, worktreePath)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Warning: Failed to copy files: %v\n", err)
+			} else if len(copiedFiles) > 0 {
+				fmt.Printf("✓ Copied files: %v\n", copiedFiles)
+			}
 
 			if !noSwitch {
 				fmt.Println(worktreePath)

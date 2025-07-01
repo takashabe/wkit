@@ -37,10 +37,10 @@ func TestListCommand(t *testing.T) {
 			},
 			repoRoot: "/path/to/repo",
 			expectedOutput: []string{
-				"PATH                                                                        HEAD BRANCH",
-				"--------------------------------------------------------------------------- ------- ----------",
-				"(root)                                                                      1234567 [main]",
-				".git/.wkit-worktrees/feature-branch                                        abcdef1 [feature-branch]",
+				"PATH\tHEAD\tBRANCH",
+				"----\t----\t------",
+				"(root)\t1234567\tmain",
+				".git/.wkit-worktrees/feature-branch\tabcdef1\tfeature-branch",
 			},
 		},
 		{
@@ -63,10 +63,10 @@ func TestListCommand(t *testing.T) {
 			},
 			repoRoot: "/path/to/repo",
 			expectedOutput: []string{
-				"PATH                                                                        HEAD BRANCH",
-				"--------------------------------------------------------------------------- ------- ----------",
-				"(root)                                                                      1234567 [main]",
-				".git/.wkit-worktrees/very-long-feature-branch-name                         abcdef1 [very-long-feature-branch-name]",
+				"PATH\tHEAD\tBRANCH",
+				"----\t----\t------",
+				"(root)\t1234567\tmain",
+				".git/.wkit-worktrees/very-long-feature-branch-name\tabcdef1\tvery-long-feature-branch-name",
 			},
 		},
 	}
@@ -93,8 +93,8 @@ func TestListCommand(t *testing.T) {
 					if !strings.HasPrefix(expected, "(root)") {
 						t.Errorf("Expected root worktree to start with '(root)', got: %s", expected)
 					}
-					if !strings.Contains(expected, "[main]") {
-						t.Errorf("Expected root worktree to contain '[main]', got: %s", expected)
+					if !strings.Contains(expected, "\tmain") {
+						t.Errorf("Expected root worktree to contain tab-separated 'main', got: %s", expected)
 					}
 				} else {
 					// Other worktrees should show relative path from repo root
@@ -102,9 +102,9 @@ func TestListCommand(t *testing.T) {
 						t.Errorf("Expected non-root worktree path to start with .git/.wkit-worktrees/, got: %s", expected)
 					}
 					
-					// Should have the git worktree list format: path + spaces + hash + space + [branch]
-					if !strings.Contains(expected, " [") || !strings.HasSuffix(expected, "]") {
-						t.Errorf("Expected format 'path hash [branch]', got: %s", expected)
+					// Should have the tab-separated format: path + tab + hash + tab + branch
+					if strings.Count(expected, "\t") != 2 {
+						t.Errorf("Expected format 'path\\thash\\tbranch' with 2 tabs, got: %s", expected)
 					}
 				}
 			}

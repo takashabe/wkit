@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"path/filepath"
-	"strings"
+	"text/tabwriter"
 
 	"github.com/spf13/cobra"
 	"wkit/internal/worktree"
@@ -66,9 +66,13 @@ func NewListCmd() *cobra.Command {
 				return encoder.Encode(outputWorktrees)
 			}
 
-			// Default human-readable format (space-padded like git worktree list with header)
-			fmt.Printf("%-75s %s %s\n", "PATH", "HEAD", "BRANCH")
-			fmt.Printf("%-75s %s %s\n", strings.Repeat("-", 75), strings.Repeat("-", 7), strings.Repeat("-", 10))
+			// Default human-readable format using tabwriter for proper alignment
+			w := tabwriter.NewWriter(cmd.OutOrStdout(), 0, 4, 2, ' ', 0)
+			defer w.Flush()
+
+			// Header
+			fmt.Fprintln(w, "PATH\tHEAD\tBRANCH")
+			fmt.Fprintln(w, "----\t----\t------")
 			
 			for _, wt := range outputWorktrees {
 				// Truncate HEAD to 7 characters for display
@@ -76,8 +80,8 @@ func NewListCmd() *cobra.Command {
 				if len(displayHEAD) > 7 {
 					displayHEAD = displayHEAD[:7]
 				}
-				// Format: path + padding + hash + space + [branch]
-				fmt.Printf("%-75s %s [%s]\n", wt.Path, displayHEAD, wt.Branch)
+				// Format with tabs for proper alignment
+				fmt.Fprintf(w, "%s\t%s\t%s\n", wt.Path, displayHEAD, wt.Branch)
 			}
 			return nil
 		},

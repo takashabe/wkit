@@ -66,12 +66,18 @@ func NewListCmd() *cobra.Command {
 				return encoder.Encode(outputWorktrees)
 			}
 
-			// Default human-readable format
-			fmt.Printf("%-30s %-20s %-12s\n", "PATH", "BRANCH", "HEAD")
-			fmt.Println(strings.Repeat("-", 65))
-
+			// Default human-readable format (space-padded like git worktree list with header)
+			fmt.Printf("%-75s %s %s\n", "PATH", "HEAD", "BRANCH")
+			fmt.Printf("%-75s %s %s\n", strings.Repeat("-", 75), strings.Repeat("-", 7), strings.Repeat("-", 10))
+			
 			for _, wt := range outputWorktrees {
-				fmt.Printf("%-30s %-20s %-12s\n", wt.Path, wt.Branch, wt.HEAD)
+				// Truncate HEAD to 7 characters for display
+				displayHEAD := wt.HEAD
+				if len(displayHEAD) > 7 {
+					displayHEAD = displayHEAD[:7]
+				}
+				// Format: path + padding + hash + space + [branch]
+				fmt.Printf("%-75s %s [%s]\n", wt.Path, displayHEAD, wt.Branch)
 			}
 			return nil
 		},

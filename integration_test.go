@@ -39,8 +39,12 @@ func TestCLIIntegration(t *testing.T) {
 		}
 
 		outputStr := string(output)
-		if !strings.Contains(outputStr, "PATH") || !strings.Contains(outputStr, "BRANCH") || !strings.Contains(outputStr, "HEAD") {
+		// New format has header and matches git worktree list format: space-padded with [branch] format
+		if !strings.Contains(outputStr, "PATH") || !strings.Contains(outputStr, "HEAD") || !strings.Contains(outputStr, "BRANCH") {
 			t.Errorf("List output doesn't contain expected headers")
+		}
+		if !strings.Contains(outputStr, "(root)") || !strings.Contains(outputStr, " [") {
+			t.Errorf("List output doesn't contain expected git worktree list format with (root) and [branch]")
 		}
 	})
 

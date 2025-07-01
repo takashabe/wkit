@@ -37,9 +37,10 @@ func TestListCommand(t *testing.T) {
 			},
 			repoRoot: "/path/to/repo",
 			expectedOutput: []string{
-				"PATH                           BRANCH               HEAD",
-				"(root)                         main                 1234567890abcdef",
-				".git/.wkit-worktrees/feature-branch feature-branch       abcdef1234567890",
+				"PATH                                                                        HEAD BRANCH",
+				"--------------------------------------------------------------------------- ------- ----------",
+				"(root)                                                                      1234567 [main]",
+				".git/.wkit-worktrees/feature-branch                                        abcdef1 [feature-branch]",
 			},
 		},
 		{
@@ -62,9 +63,10 @@ func TestListCommand(t *testing.T) {
 			},
 			repoRoot: "/path/to/repo",
 			expectedOutput: []string{
-				"PATH                           BRANCH               HEAD",
-				"(root)                         main                 1234567890abcdef",
-				".git/.wkit-worktrees/very-long-feature-branch-name very-long-feature-branch-name abcdef1234567890",
+				"PATH                                                                        HEAD BRANCH",
+				"--------------------------------------------------------------------------- ------- ----------",
+				"(root)                                                                      1234567 [main]",
+				".git/.wkit-worktrees/very-long-feature-branch-name                         abcdef1 [very-long-feature-branch-name]",
 			},
 		},
 	}
@@ -74,22 +76,35 @@ func TestListCommand(t *testing.T) {
 			// This is a unit test for the output formatting logic
 			// We'll verify that the paths are correctly formatted as relative to repo root
 			
-			// For now, we'll just verify the expected structure
+			// Verify the expected space-padded format with header
 			for i, expected := range tt.expectedOutput {
 				if i == 0 {
 					// Header line
-					if !strings.Contains(expected, "PATH") || !strings.Contains(expected, "BRANCH") || !strings.Contains(expected, "HEAD") {
-						t.Errorf("Expected header line to contain PATH, BRANCH, and HEAD")
+					if !strings.Contains(expected, "PATH") || !strings.Contains(expected, "HEAD") || !strings.Contains(expected, "BRANCH") {
+						t.Errorf("Expected header line to contain PATH, HEAD, and BRANCH")
+					}
+				} else if i == 1 {
+					// Separator line
+					if !strings.Contains(expected, "---") {
+						t.Errorf("Expected separator line with dashes")
 					}
 				} else if strings.Contains(expected, "(root)") {
 					// Root worktree should be marked as (root)
-					if !strings.Contains(expected, "main") {
-						t.Errorf("Expected root worktree to be on main branch")
+					if !strings.HasPrefix(expected, "(root)") {
+						t.Errorf("Expected root worktree to start with '(root)', got: %s", expected)
+					}
+					if !strings.Contains(expected, "[main]") {
+						t.Errorf("Expected root worktree to contain '[main]', got: %s", expected)
 					}
 				} else {
 					// Other worktrees should show relative path from repo root
 					if !strings.HasPrefix(expected, ".git/.wkit-worktrees/") {
 						t.Errorf("Expected non-root worktree path to start with .git/.wkit-worktrees/, got: %s", expected)
+					}
+					
+					// Should have the git worktree list format: path + spaces + hash + space + [branch]
+					if !strings.Contains(expected, " [") || !strings.HasSuffix(expected, "]") {
+						t.Errorf("Expected format 'path hash [branch]', got: %s", expected)
 					}
 				}
 			}

@@ -29,7 +29,7 @@ type CopyFiles struct {
 func Load() (*Config, error) {
 	v := viper.New()
 	v.SetConfigName("config") // global config file name
-	v.SetConfigType("toml")
+	v.SetConfigType("yaml")
 	if home, err := os.UserHomeDir(); err == nil {
 		v.AddConfigPath(filepath.Join(home, ".config", "wkit")) // global config path
 	}
@@ -53,7 +53,7 @@ func Load() (*Config, error) {
 	// Read local config (if exists) and merge
 	localV := viper.New()
 	localV.SetConfigName(".wkit") // local config file name
-	localV.SetConfigType("toml")
+	localV.SetConfigType("yaml")
 	localV.AddConfigPath(".")
 
 	if err := localV.ReadInConfig(); err == nil {
@@ -80,7 +80,7 @@ func Load() (*Config, error) {
 func SaveGlobal(cfg *Config) error {
 	v := viper.New()
 	v.SetConfigName("config")
-	v.SetConfigType("toml")
+	v.SetConfigType("yaml")
 	if home, err := os.UserHomeDir(); err == nil {
 		v.AddConfigPath(filepath.Join(home, ".config", "wkit"))
 	} else {
@@ -102,7 +102,7 @@ func SaveGlobal(cfg *Config) error {
 	v.Set("copy_files.enabled", cfg.CopyFiles.Enabled)
 	v.Set("copy_files.files", cfg.CopyFiles.Files)
 
-	configPath := filepath.Join(configDir, "config.toml")
+	configPath := filepath.Join(configDir, "config.yaml")
 	if err := v.WriteConfigAs(configPath); err != nil {
 		return fmt.Errorf("failed to write global config file: %w", err)
 	}
@@ -110,11 +110,11 @@ func SaveGlobal(cfg *Config) error {
 	return nil
 }
 
-// InitLocal creates a local .wkit.toml file with default values
+// InitLocal creates a local .wkit.yaml file with default values
 func InitLocal() error {
 	v := viper.New()
 	v.SetConfigName(".wkit")
-	v.SetConfigType("toml")
+	v.SetConfigType("yaml")
 	v.AddConfigPath(".")
 
 	// Set default values
@@ -126,7 +126,7 @@ func InitLocal() error {
 	v.SetDefault("copy_files.enabled", false)
 	v.SetDefault("copy_files.files", []string{".envrc", "compose.override.yaml", ".env.local", "config/local.yaml"})
 
-	if err := v.SafeWriteConfigAs(".wkit.toml"); err != nil {
+	if err := v.SafeWriteConfigAs(".wkit.yaml"); err != nil {
 		return fmt.Errorf("failed to create local config file: %w", err)
 	}
 

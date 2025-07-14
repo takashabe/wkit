@@ -105,7 +105,7 @@ func NewConfigInitCmd() *cobra.Command {
 			if err != nil {
 				return fmt.Errorf("failed to create local config file: %w", err)
 			}
-			fmt.Println("✓ Created local configuration file: .wkit.toml")
+			fmt.Println("✓ Created local configuration file: .wkit.yaml")
 			return nil
 		},
 	}

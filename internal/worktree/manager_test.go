@@ -207,7 +207,7 @@ func TestAddWorktree_BaseBranchHandling(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			// Test the prefix logic without calling actual git commands
 			var actualBaseBranch string
-			
+
 			if strings.HasPrefix(tt.baseBranch, "origin/") {
 				// Already has origin/ prefix, use as-is
 				actualBaseBranch = tt.baseBranch

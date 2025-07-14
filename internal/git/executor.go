@@ -45,7 +45,7 @@ func (e *Executor) ExecuteWithStderr(args ...string) (string, string, error) {
 
 	stdout, err := cmd.Output()
 	stderr := ""
-	
+
 	if exitError, ok := err.(*exec.ExitError); ok {
 		stderr = string(exitError.Stderr)
 	}
@@ -82,7 +82,7 @@ func (e *Executor) WorktreeRemove(path string, force bool) error {
 		args = append(args, "--force")
 	}
 	args = append(args, path)
-	
+
 	_, err := e.Execute(args...)
 	return err
 }
@@ -116,7 +116,7 @@ func (e *Executor) BranchMerged(branch string) ([]string, error) {
 		branch := strings.TrimPrefix(line, "* ")
 		branches = append(branches, branch)
 	}
-	
+
 	return branches, nil
 }
 
@@ -140,7 +140,7 @@ func (e *Executor) RemoteBranches(remote string) ([]string, error) {
 			branches = append(branches, branch)
 		}
 	}
-	
+
 	return branches, nil
 }
 

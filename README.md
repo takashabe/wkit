@@ -11,7 +11,6 @@ A CLI tool for convenient Git worktree management.
 - **Flexible configuration** - Local (`.wkit.yaml`) and global (`~/.config/wkit/config.yaml`) configuration with XDG support
 - **Batch operations** - Clean up multiple worktrees efficiently
 - **Sync with main branch** - Keep worktrees up-to-date with merge or rebase
-- **Z-style navigation** - Frecency-based worktree jumping
 
 ## Installation
 
@@ -65,10 +64,6 @@ wkit sync                    # current worktree
 wkit sync feature-branch     # specific worktree
 wkit sync --rebase          # use rebase instead of merge
 
-# Z-style jumping
-wkit z proj                 # jump to most frecent match
-wkit z --list              # list all entries
-wkit z --add               # add current directory
 ```
 
 ### Configuration
@@ -118,9 +113,6 @@ wkit_root: ".git/.wkit-worktrees"
 
 # Automatically clean up deleted branches
 auto_cleanup: false
-
-# Enable z integration
-z_integration: true
 
 # Default sync strategy (merge or rebase)
 default_sync_strategy: "merge"

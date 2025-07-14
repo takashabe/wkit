@@ -11,11 +11,10 @@ import (
 
 // Config represents the application configuration
 type Config struct {
-	WkitRoot            string   `mapstructure:"wkit_root"`
-	AutoCleanup         bool     `mapstructure:"auto_cleanup"`
-	ZIntegration        bool     `mapstructure:"z_integration"` // 削除予定だが、互換性のため残す
-	DefaultSyncStrategy string   `mapstructure:"default_sync_strategy"`
-	MainBranch          string   `mapstructure:"main_branch"`
+	WkitRoot            string    `mapstructure:"wkit_root"`
+	AutoCleanup         bool      `mapstructure:"auto_cleanup"`
+	DefaultSyncStrategy string    `mapstructure:"default_sync_strategy"`
+	MainBranch          string    `mapstructure:"main_branch"`
 	CopyFiles           CopyFiles `mapstructure:"copy_files"`
 }
 
@@ -37,7 +36,6 @@ func Load() (*Config, error) {
 	// Set default values
 	v.SetDefault("wkit_root", ".git/.wkit-worktrees")
 	v.SetDefault("auto_cleanup", false)
-	v.SetDefault("z_integration", false)
 	v.SetDefault("default_sync_strategy", "merge")
 	v.SetDefault("main_branch", "main")
 	v.SetDefault("copy_files.enabled", false)
@@ -72,7 +70,6 @@ func Load() (*Config, error) {
 		return nil, fmt.Errorf("failed to unmarshal config: %w", err)
 	}
 
-
 	return &cfg, nil
 }
 
@@ -89,14 +86,13 @@ func SaveGlobal(cfg *Config) error {
 
 	// Ensure the config directory exists
 	configDir := filepath.Join(os.Getenv("HOME"), ".config", "wkit")
-	if err := os.MkdirAll(configDir, 0755); err != nil {
+	if err := os.MkdirAll(configDir, 0o755); err != nil {
 		return fmt.Errorf("failed to create config directory: %w", err)
 	}
 
 	// Set values from the provided config struct
 	v.Set("wkit_root", cfg.WkitRoot)
 	v.Set("auto_cleanup", cfg.AutoCleanup)
-	v.Set("z_integration", cfg.ZIntegration)
 	v.Set("default_sync_strategy", cfg.DefaultSyncStrategy)
 	v.Set("main_branch", cfg.MainBranch)
 	v.Set("copy_files.enabled", cfg.CopyFiles.Enabled)
@@ -120,7 +116,6 @@ func InitLocal() error {
 	// Set default values
 	v.SetDefault("wkit_root", ".git/.wkit-worktrees")
 	v.SetDefault("auto_cleanup", false)
-	v.SetDefault("z_integration", false)
 	v.SetDefault("default_sync_strategy", "merge")
 	v.SetDefault("main_branch", "main")
 	v.SetDefault("copy_files.enabled", false)
@@ -193,7 +188,7 @@ func (c *Config) CopyFilesToWorktree(sourceDir string, targetDir string) ([]stri
 
 func (c *Config) copySingleFile(sourceFile string, targetFile string, relativePath string, copiedFiles *[]string) error {
 	// Create parent directories if needed
-	if err := os.MkdirAll(filepath.Dir(targetFile), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Dir(targetFile), 0o755); err != nil {
 		return fmt.Errorf("failed to create directory: %w", err)
 	}
 
@@ -207,7 +202,7 @@ func (c *Config) copySingleFile(sourceFile string, targetFile string, relativePa
 		return fmt.Errorf("failed to read source file %s: %w", sourceFile, err)
 	}
 
-	err = os.WriteFile(targetFile, input, 0644)
+	err = os.WriteFile(targetFile, input, 0o644)
 	if err != nil {
 		return fmt.Errorf("failed to write target file %s: %w", targetFile, err)
 	}

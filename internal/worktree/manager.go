@@ -86,12 +86,12 @@ func GetRepositoryRoot() (string, error) {
 		return "", fmt.Errorf("failed to execute git rev-parse --git-common-dir: %w", err)
 	}
 	gitDir := strings.TrimSpace(string(output))
-	
+
 	// The repository root is the parent of .git directory
 	if strings.HasSuffix(gitDir, "/.git") {
 		return strings.TrimSuffix(gitDir, "/.git"), nil
 	}
-	
+
 	// Fallback to show-toplevel if not a standard .git directory
 	cmd = exec.Command("git", "rev-parse", "--show-toplevel")
 	output, err = cmd.Output()

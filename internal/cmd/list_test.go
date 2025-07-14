@@ -8,8 +8,8 @@ import (
 
 func TestListCommand(t *testing.T) {
 	tests := []struct {
-		name           string
-		worktrees      []struct {
+		name      string
+		worktrees []struct {
 			path   string
 			branch string
 			head   string
@@ -75,7 +75,7 @@ func TestListCommand(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			// This is a unit test for the output formatting logic
 			// We'll verify that the paths are correctly formatted as relative to repo root
-			
+
 			// Verify the expected space-padded format with header
 			for i, expected := range tt.expectedOutput {
 				if i == 0 {
@@ -101,7 +101,7 @@ func TestListCommand(t *testing.T) {
 					if !strings.HasPrefix(expected, ".git/.wkit-worktrees/") {
 						t.Errorf("Expected non-root worktree path to start with .git/.wkit-worktrees/, got: %s", expected)
 					}
-					
+
 					// Should have the tab-separated format: path + tab + hash + tab + branch
 					if strings.Count(expected, "\t") != 2 {
 						t.Errorf("Expected format 'path\\thash\\tbranch' with 2 tabs, got: %s", expected)
@@ -115,7 +115,7 @@ func TestListCommand(t *testing.T) {
 func TestListCommandRelativePaths(t *testing.T) {
 	// Test that paths are always relative to the git repository root,
 	// regardless of where the command is executed from
-	
+
 	tests := []struct {
 		name         string
 		worktreePath string

@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+
 	"wkit/internal/config"
 )
 
@@ -22,43 +23,43 @@ func TestCopyFilesIntegrationInAddCommand(t *testing.T) {
 	targetDir := filepath.Join(tmpDir, "target")
 
 	// Create source and target directories
-	err = os.MkdirAll(sourceDir, 0755)
+	err = os.MkdirAll(sourceDir, 0o755)
 	if err != nil {
 		t.Fatalf("Failed to create source dir: %v", err)
 	}
-	err = os.MkdirAll(targetDir, 0755)
+	err = os.MkdirAll(targetDir, 0o755)
 	if err != nil {
 		t.Fatalf("Failed to create target dir: %v", err)
 	}
 
 	// Create test files in source directory
-	err = os.WriteFile(filepath.Join(sourceDir, ".envrc"), []byte("export TEST_VAR=value"), 0644)
+	err = os.WriteFile(filepath.Join(sourceDir, ".envrc"), []byte("export TEST_VAR=value"), 0o644)
 	if err != nil {
 		t.Fatalf("Failed to create .envrc: %v", err)
 	}
 
-	err = os.MkdirAll(filepath.Join(sourceDir, "config"), 0755)
+	err = os.MkdirAll(filepath.Join(sourceDir, "config"), 0o755)
 	if err != nil {
 		t.Fatalf("Failed to create config directory: %v", err)
 	}
-	err = os.WriteFile(filepath.Join(sourceDir, "config", "local.yaml"), []byte("env: test"), 0644)
+	err = os.WriteFile(filepath.Join(sourceDir, "config", "local.yaml"), []byte("env: test"), 0o644)
 	if err != nil {
 		t.Fatalf("Failed to create config/local.yaml: %v", err)
 	}
 
 	tests := []struct {
-		name           string
-		copyEnabled    bool
-		expectedFiles  []string
+		name          string
+		copyEnabled   bool
+		expectedFiles []string
 	}{
 		{
-			name:        "copy_files enabled",
-			copyEnabled: true,
+			name:          "copy_files enabled",
+			copyEnabled:   true,
 			expectedFiles: []string{".envrc", "config/local.yaml"},
 		},
 		{
-			name:        "copy_files disabled",
-			copyEnabled: false,
+			name:          "copy_files disabled",
+			copyEnabled:   false,
 			expectedFiles: []string{},
 		},
 	}
@@ -67,7 +68,7 @@ func TestCopyFilesIntegrationInAddCommand(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			// Clean target directory for each test
 			os.RemoveAll(targetDir)
-			err = os.MkdirAll(targetDir, 0755)
+			err = os.MkdirAll(targetDir, 0o755)
 			if err != nil {
 				t.Fatalf("Failed to recreate target dir: %v", err)
 			}
@@ -124,7 +125,7 @@ func TestCopyFilesIntegrationInAddCommand(t *testing.T) {
 				}
 
 				if string(sourceContent) != string(targetContent) {
-					t.Errorf("Content mismatch for file %s. Source: %q, Target: %q", 
+					t.Errorf("Content mismatch for file %s. Source: %q, Target: %q",
 						expectedFile, string(sourceContent), string(targetContent))
 				}
 			}
@@ -141,4 +142,3 @@ func TestCopyFilesIntegrationInAddCommand(t *testing.T) {
 		})
 	}
 }
-

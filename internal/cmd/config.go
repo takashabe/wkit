@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"os"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -62,10 +61,6 @@ func NewConfigSetCmd() *cobra.Command {
 			switch key {
 			case "wkit_root":
 				cfg.WkitRoot = value
-			case "default_worktree_path": // 後方互換性のため残す
-				cfg.DefaultWorktreePath = value
-				cfg.WkitRoot = value
-				fmt.Fprintf(os.Stderr, "Warning: 'default_worktree_path' is deprecated. Please use 'wkit_root' instead.\n")
 			case "auto_cleanup":
 				b, err := parseBool(value)
 				if err != nil {

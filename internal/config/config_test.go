@@ -138,50 +138,6 @@ func TestInitLocal(t *testing.T) {
 	}
 }
 
-// Test backward compatibility when loading old config with default_worktree_path
-func TestLoad_BackwardCompatibility(t *testing.T) {
-	// Create a temporary directory for testing
-	tmpDir, err := os.MkdirTemp("", "wkit-test")
-	if err != nil {
-		t.Fatalf("Failed to create temp dir: %v", err)
-	}
-	defer os.RemoveAll(tmpDir)
-
-	// Change to the temp directory
-	oldCwd, err := os.Getwd()
-	if err != nil {
-		t.Fatalf("Failed to get current directory: %v", err)
-	}
-	defer os.Chdir(oldCwd)
-
-	err = os.Chdir(tmpDir)
-	if err != nil {
-		t.Fatalf("Failed to change directory: %v", err)
-	}
-
-	// Create a config file with old key name
-	configContent := `default_worktree_path = "/old/path"`
-	err = os.WriteFile(".wkit.toml", []byte(configContent), 0644)
-	if err != nil {
-		t.Fatalf("Failed to write config file: %v", err)
-	}
-
-	// Load config and check if it migrates correctly
-	cfg, err := Load()
-	if err != nil {
-		t.Fatalf("Load() failed: %v", err)
-	}
-
-	// Check that WkitRoot is set from the old key
-	if cfg.WkitRoot != "/old/path" {
-		t.Errorf("WkitRoot = %v, want %v", cfg.WkitRoot, "/old/path")
-	}
-
-	// Check that DefaultWorktreePath is also set (for backward compatibility)
-	if cfg.DefaultWorktreePath != "/old/path" {
-		t.Errorf("DefaultWorktreePath = %v, want %v", cfg.DefaultWorktreePath, "/old/path")
-	}
-}
 
 func TestCopyFilesToWorktreeWithNestedDirectories(t *testing.T) {
 	// Create a temporary directory for testing

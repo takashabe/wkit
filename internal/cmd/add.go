@@ -62,7 +62,7 @@ func NewAddCmd() *cobra.Command {
 			if err != nil {
 				return fmt.Errorf("failed to get repository root: %w", err)
 			}
-			
+
 			copiedFiles, err := cfg.CopyFilesToWorktree(repoRoot, worktreePath)
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "Warning: Failed to copy files: %v\n", err)

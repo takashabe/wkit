@@ -12,7 +12,7 @@ import (
 
 func NewListCmd() *cobra.Command {
 	var format string
-	
+
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "List all worktrees",
@@ -73,7 +73,7 @@ func NewListCmd() *cobra.Command {
 			// Header
 			fmt.Fprintln(w, "PATH\tHEAD\tBRANCH")
 			fmt.Fprintln(w, "----\t----\t------")
-			
+
 			for _, wt := range outputWorktrees {
 				// Truncate HEAD to 7 characters for display
 				displayHEAD := wt.HEAD

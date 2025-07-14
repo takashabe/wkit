@@ -87,7 +87,7 @@ func TestLoad(t *testing.T) {
 	// Set temporary HOME to avoid reading user's global config
 	oldHome := os.Getenv("HOME")
 	tmpHome := filepath.Join(tmpDir, "home")
-	os.Mkdir(tmpHome, 0755)
+	os.Mkdir(tmpHome, 0o755)
 	os.Setenv("HOME", tmpHome)
 	defer os.Setenv("HOME", oldHome)
 
@@ -145,7 +145,6 @@ func TestInitLocal(t *testing.T) {
 	}
 }
 
-
 func TestCopyFilesToWorktreeWithNestedDirectories(t *testing.T) {
 	// Create a temporary directory for testing
 	tmpDir, err := os.MkdirTemp("", "wkit-test")
@@ -158,12 +157,12 @@ func TestCopyFilesToWorktreeWithNestedDirectories(t *testing.T) {
 	targetDir := filepath.Join(tmpDir, "target")
 
 	// Create source directory structure
-	err = os.MkdirAll(sourceDir, 0755)
+	err = os.MkdirAll(sourceDir, 0o755)
 	if err != nil {
 		t.Fatalf("Failed to create source dir: %v", err)
 	}
 
-	err = os.MkdirAll(targetDir, 0755)
+	err = os.MkdirAll(targetDir, 0o755)
 	if err != nil {
 		t.Fatalf("Failed to create target dir: %v", err)
 	}
@@ -183,10 +182,10 @@ func TestCopyFilesToWorktreeWithNestedDirectories(t *testing.T) {
 				},
 			},
 			fileStructure: map[string]string{
-				".envrc":                        "export PATH=/usr/bin",
-				"subdir/.envrc":                 "export PATH=/usr/local/bin",
-				"config/config.yaml":            "database: production",
-				"deep/nested/config.yaml":       "database: test",
+				".envrc":                         "export PATH=/usr/bin",
+				"subdir/.envrc":                  "export PATH=/usr/local/bin",
+				"config/config.yaml":             "database: production",
+				"deep/nested/config.yaml":        "database: test",
 				"config/deep/nested/config.yaml": "database: staging",
 			},
 			expectedCopies: []string{
@@ -206,11 +205,11 @@ func TestCopyFilesToWorktreeWithNestedDirectories(t *testing.T) {
 				},
 			},
 			fileStructure: map[string]string{
-				"config/local.yaml":      "env: local",
-				"config/prod.yaml":       "env: prod",
+				"config/local.yaml":       "env: local",
+				"config/prod.yaml":        "env: prod",
 				"other/config/local.yaml": "env: other",
-				".env.local":             "DEBUG=true",
-				"subdir/.env.local":      "DEBUG=false",
+				".env.local":              "DEBUG=true",
+				"subdir/.env.local":       "DEBUG=false",
 			},
 			expectedCopies: []string{
 				"config/local.yaml",
@@ -251,11 +250,11 @@ func TestCopyFilesToWorktreeWithNestedDirectories(t *testing.T) {
 			// Clean up directories for each test
 			os.RemoveAll(sourceDir)
 			os.RemoveAll(targetDir)
-			err = os.MkdirAll(sourceDir, 0755)
+			err = os.MkdirAll(sourceDir, 0o755)
 			if err != nil {
 				t.Fatalf("Failed to create source dir: %v", err)
 			}
-			err = os.MkdirAll(targetDir, 0755)
+			err = os.MkdirAll(targetDir, 0o755)
 			if err != nil {
 				t.Fatalf("Failed to create target dir: %v", err)
 			}
@@ -264,10 +263,10 @@ func TestCopyFilesToWorktreeWithNestedDirectories(t *testing.T) {
 			for filePath, content := range tt.fileStructure {
 				fullPath := filepath.Join(sourceDir, filePath)
 				dir := filepath.Dir(fullPath)
-				if err := os.MkdirAll(dir, 0755); err != nil {
+				if err := os.MkdirAll(dir, 0o755); err != nil {
 					t.Fatalf("Failed to create directory %s: %v", dir, err)
 				}
-				if err := os.WriteFile(fullPath, []byte(content), 0644); err != nil {
+				if err := os.WriteFile(fullPath, []byte(content), 0o644); err != nil {
 					t.Fatalf("Failed to create file %s: %v", fullPath, err)
 				}
 			}

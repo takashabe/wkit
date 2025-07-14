@@ -85,7 +85,7 @@ func TestInvalidCommand(t *testing.T) {
 
 	cmd := exec.Command(binaryPath, "nonexistent-command")
 	output, err := cmd.CombinedOutput()
-	
+
 	// Command should fail
 	if err == nil {
 		t.Fatalf("Expected invalid command to fail, but it succeeded")

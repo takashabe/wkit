@@ -11,10 +11,10 @@ import (
 
 // Config represents the application configuration
 type Config struct {
-	WkitRoot            string   `mapstructure:"wkit_root"`
-	AutoCleanup         bool     `mapstructure:"auto_cleanup"`
-	DefaultSyncStrategy string   `mapstructure:"default_sync_strategy"`
-	MainBranch          string   `mapstructure:"main_branch"`
+	WkitRoot            string    `mapstructure:"wkit_root"`
+	AutoCleanup         bool      `mapstructure:"auto_cleanup"`
+	DefaultSyncStrategy string    `mapstructure:"default_sync_strategy"`
+	MainBranch          string    `mapstructure:"main_branch"`
 	CopyFiles           CopyFiles `mapstructure:"copy_files"`
 }
 
@@ -70,7 +70,6 @@ func Load() (*Config, error) {
 		return nil, fmt.Errorf("failed to unmarshal config: %w", err)
 	}
 
-
 	return &cfg, nil
 }
 
@@ -87,7 +86,7 @@ func SaveGlobal(cfg *Config) error {
 
 	// Ensure the config directory exists
 	configDir := filepath.Join(os.Getenv("HOME"), ".config", "wkit")
-	if err := os.MkdirAll(configDir, 0755); err != nil {
+	if err := os.MkdirAll(configDir, 0o755); err != nil {
 		return fmt.Errorf("failed to create config directory: %w", err)
 	}
 
@@ -189,7 +188,7 @@ func (c *Config) CopyFilesToWorktree(sourceDir string, targetDir string) ([]stri
 
 func (c *Config) copySingleFile(sourceFile string, targetFile string, relativePath string, copiedFiles *[]string) error {
 	// Create parent directories if needed
-	if err := os.MkdirAll(filepath.Dir(targetFile), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Dir(targetFile), 0o755); err != nil {
 		return fmt.Errorf("failed to create directory: %w", err)
 	}
 
@@ -203,7 +202,7 @@ func (c *Config) copySingleFile(sourceFile string, targetFile string, relativePa
 		return fmt.Errorf("failed to read source file %s: %w", sourceFile, err)
 	}
 
-	err = os.WriteFile(targetFile, input, 0644)
+	err = os.WriteFile(targetFile, input, 0o644)
 	if err != nil {
 		return fmt.Errorf("failed to write target file %s: %w", targetFile, err)
 	}

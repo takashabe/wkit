@@ -58,7 +58,7 @@ func TestBranchExists(t *testing.T) {
 	}
 
 	executor := NewExecutor("")
-	
+
 	// Test with a branch that should exist (current branch)
 	// Get current branch first
 	currentBranch, err := executor.Execute("rev-parse", "--abbrev-ref", "HEAD")

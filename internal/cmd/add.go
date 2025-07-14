@@ -38,13 +38,19 @@ func NewAddCmd() *cobra.Command {
 			}
 
 			noSwitch, _ := cmd.Flags().GetBool("no-switch")
+			baseBranch, _ := cmd.Flags().GetString("base-branch")
 
 			cfg, err := config.Load()
 			if err != nil {
 				return fmt.Errorf("failed to load config: %w", err)
 			}
 
-			err = manager.AddWorktree(branch, worktreePath, cfg.MainBranch)
+			// Use provided base branch or fall back to config main branch
+			if baseBranch == "" {
+				baseBranch = cfg.MainBranch
+			}
+
+			err = manager.AddWorktree(branch, worktreePath, baseBranch)
 			if err != nil {
 				return fmt.Errorf("failed to add worktree: %w", err)
 			}
@@ -72,5 +78,6 @@ func NewAddCmd() *cobra.Command {
 	}
 
 	cmd.Flags().Bool("no-switch", false, "Skip automatic switching to new worktree")
+	cmd.Flags().StringP("base-branch", "b", "", "Base branch to create new branch from (defaults to config main_branch)")
 	return cmd
 }

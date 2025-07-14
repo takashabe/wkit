@@ -102,7 +102,7 @@ func GetRepositoryRoot() (string, error) {
 }
 
 // AddWorktree adds a new worktree
-func (m *Manager) AddWorktree(branch string, path string, mainBranch string) error {
+func (m *Manager) AddWorktree(branch string, path string, baseBranch string) error {
 	// Check if branch exists
 	branchExists := m.branchExists(branch)
 
@@ -110,9 +110,20 @@ func (m *Manager) AddWorktree(branch string, path string, mainBranch string) err
 	cmdArgs = append(cmdArgs, "worktree", "add")
 
 	if !branchExists {
-		// Use -b flag to create new branch from origin/<main_branch>
-		baseBranch := fmt.Sprintf("origin/%s", mainBranch)
-		cmdArgs = append(cmdArgs, "-b", branch, path, baseBranch)
+		// Use -b flag to create new branch from specified base branch
+		// First check if base branch exists locally, otherwise try remote
+		var actualBaseBranch string
+		if strings.HasPrefix(baseBranch, "origin/") {
+			// Already has origin/ prefix, use as-is
+			actualBaseBranch = baseBranch
+		} else if m.branchExists(baseBranch) {
+			// Local branch exists, use as-is
+			actualBaseBranch = baseBranch
+		} else {
+			// Try remote branch
+			actualBaseBranch = fmt.Sprintf("origin/%s", baseBranch)
+		}
+		cmdArgs = append(cmdArgs, "-b", branch, path, actualBaseBranch)
 	} else {
 		cmdArgs = append(cmdArgs, path, branch)
 	}

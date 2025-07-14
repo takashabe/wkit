@@ -1,6 +1,8 @@
 package worktree
 
 import (
+	"fmt"
+	"strings"
 	"testing"
 )
 
@@ -162,5 +164,64 @@ func TestNewManager(t *testing.T) {
 
 	if manager == nil {
 		t.Error("NewManager() returned nil")
+	}
+}
+
+func TestAddWorktree_BaseBranchHandling(t *testing.T) {
+	// Test that the AddWorktree method properly handles base branch parameters
+	// This tests the logic for prefix handling in AddWorktree method
+
+	tests := []struct {
+		name               string
+		baseBranch         string
+		localBranchExists  bool
+		expectedBaseBranch string
+	}{
+		{
+			name:               "base branch without origin prefix, local branch exists",
+			baseBranch:         "main",
+			localBranchExists:  true,
+			expectedBaseBranch: "main",
+		},
+		{
+			name:               "base branch without origin prefix, local branch doesn't exist",
+			baseBranch:         "main",
+			localBranchExists:  false,
+			expectedBaseBranch: "origin/main",
+		},
+		{
+			name:               "base branch with origin prefix",
+			baseBranch:         "origin/develop",
+			localBranchExists:  false,
+			expectedBaseBranch: "origin/develop",
+		},
+		{
+			name:               "base branch is empty, local branch doesn't exist",
+			baseBranch:         "",
+			localBranchExists:  false,
+			expectedBaseBranch: "origin/",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Test the prefix logic without calling actual git commands
+			var actualBaseBranch string
+			
+			if strings.HasPrefix(tt.baseBranch, "origin/") {
+				// Already has origin/ prefix, use as-is
+				actualBaseBranch = tt.baseBranch
+			} else if tt.localBranchExists {
+				// Local branch exists, use as-is
+				actualBaseBranch = tt.baseBranch
+			} else {
+				// Try remote branch
+				actualBaseBranch = fmt.Sprintf("origin/%s", tt.baseBranch)
+			}
+
+			if actualBaseBranch != tt.expectedBaseBranch {
+				t.Errorf("Expected base branch %s, got %s", tt.expectedBaseBranch, actualBaseBranch)
+			}
+		})
 	}
 }

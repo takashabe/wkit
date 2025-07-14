@@ -102,37 +102,6 @@ end
 
 # Note: Aliases and completions are handled by conf.d/wkit.fish and completions/wkit.fish
 
-# Z-style jumping function
-function wz -d "Jump to worktree using frecency (z-style)"
-    if test (count $argv) -eq 0
-        wkit z
-        return
-    end
-    
-    set -l target_path (wkit z $argv)
-    set -l exit_code $status
-    
-    if test $exit_code -eq 0 -a -n "$target_path"
-        cd "$target_path"
-        echo "✓ Jumped to: "(basename "$target_path")" at $target_path"
-    else
-        return $exit_code
-    end
-end
-
-# Enhanced z function that integrates with wkit
-function z-wkit -d "Enhanced z function with wkit integration"
-    # If wkit z finds a match, use it; otherwise fall back to regular z
-    set -l wkit_result (wkit z $argv 2>/dev/null)
-    if test $status -eq 0 -a -n "$wkit_result"
-        cd "$wkit_result"
-        echo "✓ wkit: Jumped to "(basename "$wkit_result")
-    else
-        # Fall back to regular z command
-        command z $argv
-    end
-end
-
 # Enhanced add function with auto-switch capability
 function wkit-add-auto -d "Add worktree with optional auto-switch"
     if test (count $argv) -eq 0

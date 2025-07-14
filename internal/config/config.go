@@ -13,7 +13,6 @@ import (
 type Config struct {
 	WkitRoot            string   `mapstructure:"wkit_root"`
 	AutoCleanup         bool     `mapstructure:"auto_cleanup"`
-	ZIntegration        bool     `mapstructure:"z_integration"` // 削除予定だが、互換性のため残す
 	DefaultSyncStrategy string   `mapstructure:"default_sync_strategy"`
 	MainBranch          string   `mapstructure:"main_branch"`
 	CopyFiles           CopyFiles `mapstructure:"copy_files"`
@@ -37,7 +36,6 @@ func Load() (*Config, error) {
 	// Set default values
 	v.SetDefault("wkit_root", ".git/.wkit-worktrees")
 	v.SetDefault("auto_cleanup", false)
-	v.SetDefault("z_integration", false)
 	v.SetDefault("default_sync_strategy", "merge")
 	v.SetDefault("main_branch", "main")
 	v.SetDefault("copy_files.enabled", false)
@@ -96,7 +94,6 @@ func SaveGlobal(cfg *Config) error {
 	// Set values from the provided config struct
 	v.Set("wkit_root", cfg.WkitRoot)
 	v.Set("auto_cleanup", cfg.AutoCleanup)
-	v.Set("z_integration", cfg.ZIntegration)
 	v.Set("default_sync_strategy", cfg.DefaultSyncStrategy)
 	v.Set("main_branch", cfg.MainBranch)
 	v.Set("copy_files.enabled", cfg.CopyFiles.Enabled)
@@ -120,7 +117,6 @@ func InitLocal() error {
 	// Set default values
 	v.SetDefault("wkit_root", ".git/.wkit-worktrees")
 	v.SetDefault("auto_cleanup", false)
-	v.SetDefault("z_integration", false)
 	v.SetDefault("default_sync_strategy", "merge")
 	v.SetDefault("main_branch", "main")
 	v.SetDefault("copy_files.enabled", false)

@@ -3,13 +3,12 @@
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Go](https://img.shields.io/badge/go-1.21+-00ADD8.svg)](https://go.dev/)
 
-A CLI tool for convenient Git worktree management with Fish shell integration examples.
+A CLI tool for convenient Git worktree management.
 
 ## Features
 
 - **Worktree management** - Create, list, remove, and switch between Git worktrees
 - **Flexible configuration** - Local (`.wkit.toml`) and global (`~/.config/wkit/config.toml`) configuration with XDG support
-- **Fish shell integration** - Tab completion, aliases, and prompt integration
 - **Batch operations** - Clean up multiple worktrees efficiently
 - **Sync with main branch** - Keep worktrees up-to-date with merge or rebase
 - **Z-style navigation** - Frecency-based worktree jumping
@@ -28,15 +27,14 @@ go build -o wkit .
 sudo cp wkit /usr/local/bin/
 ```
 
-### Fish Shell Integration (Optional)
+### Shell Integration (Optional)
 
-See [examples/fish/](examples/fish/) for Fish shell integration examples that you can customize and add to your configuration.
+See [examples/fish/](examples/fish/) for shell integration examples that you can customize and add to your configuration.
 
 ### Requirements
 
 - Go (1.21+)
 - Git (2.25+)
-- Fish shell (3.0+) - optional for shell integration examples
 
 ## Usage
 
@@ -97,9 +95,9 @@ wkit config init
 wkit list --format=json
 ```
 
-### Fish Shell Integration Examples
+### Shell Integration Examples
 
-See [examples/fish/](examples/fish/) for Fish shell functions and integration examples including:
+See [examples/fish/](examples/fish/) for shell integration examples including:
 
 - Fuzzy worktree switching with fzf
 - Custom aliases and functions

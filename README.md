@@ -78,7 +78,7 @@ wkit z --add               # add current directory
 wkit config show
 
 # Set configuration values
-wkit config set default_worktree_path .git/.wkit-worktrees
+wkit config set wkit_root .git/.wkit-worktrees
 wkit config set auto_cleanup true
 wkit config set main_branch main
 
@@ -114,7 +114,7 @@ Configuration files:
 
 ```toml
 # Default path for new worktrees
-default_worktree_path = ".git/.wkit-worktrees"
+wkit_root = ".git/.wkit-worktrees"
 
 # Automatically clean up deleted branches
 auto_cleanup = false

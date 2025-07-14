@@ -48,8 +48,6 @@ Uses a hierarchical configuration system:
 
 Configuration keys: `wkit_root`, `auto_cleanup`, `default_sync_strategy`, `main_branch`, `copy_files`
 
-Note: `default_worktree_path` is deprecated in favor of `wkit_root` but still supported for backward compatibility.
-
 ## Shell Integration
 
 The `examples/fish/` directory contains example Fish shell integrations that users can customize:

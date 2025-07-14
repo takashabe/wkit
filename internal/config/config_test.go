@@ -132,7 +132,7 @@ func TestInitLocal(t *testing.T) {
 	}
 
 	// Check if the file was created
-	configPath := filepath.Join(tmpDir, ".wkit.toml")
+	configPath := filepath.Join(tmpDir, ".wkit.yaml")
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
 		t.Errorf("Config file was not created at %v", configPath)
 	}

@@ -96,8 +96,8 @@ func TestLoad(t *testing.T) {
 		t.Errorf("WkitRoot is empty")
 	}
 
-	if cfg.MainBranch != "main" {
-		t.Errorf("MainBranch = %v, want %v", cfg.MainBranch, "main")
+	if cfg.MainBranch != "develop" {
+		t.Errorf("MainBranch = %v, want %v", cfg.MainBranch, "develop")
 	}
 
 	if cfg.DefaultSyncStrategy != "merge" {

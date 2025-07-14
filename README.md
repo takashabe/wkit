@@ -8,7 +8,7 @@ A CLI tool for convenient Git worktree management.
 ## Features
 
 - **Worktree management** - Create, list, remove, and switch between Git worktrees
-- **Flexible configuration** - Local (`.wkit.toml`) and global (`~/.config/wkit/config.toml`) configuration with XDG support
+- **Flexible configuration** - Local (`.wkit.yaml`) and global (`~/.config/wkit/config.yaml`) configuration with XDG support
 - **Batch operations** - Clean up multiple worktrees efficiently
 - **Sync with main branch** - Keep worktrees up-to-date with merge or rebase
 - **Z-style navigation** - Frecency-based worktree jumping
@@ -107,37 +107,40 @@ See [examples/fish/](examples/fish/) for shell integration examples including:
 ## Configuration
 
 Configuration files:
-- Local: `.wkit.toml` (project-specific)
-- Global: `~/.config/wkit/config.toml` (or `$XDG_CONFIG_HOME/wkit/config.toml`)
+- Local: `.wkit.yaml` (project-specific)
+- Global: `~/.config/wkit/config.yaml` (or `$XDG_CONFIG_HOME/wkit/config.yaml`)
 
 ### Options
 
-```toml
+```yaml
 # Default path for new worktrees
-wkit_root = ".git/.wkit-worktrees"
+wkit_root: ".git/.wkit-worktrees"
 
 # Automatically clean up deleted branches
-auto_cleanup = false
+auto_cleanup: false
 
 # Enable z integration
-z_integration = true
+z_integration: true
 
 # Default sync strategy (merge or rebase)
-default_sync_strategy = "merge"
+default_sync_strategy: "merge"
 
 # Main branch name
-main_branch = "main"
+main_branch: "main"
 
 # Copy files to new worktrees
-[copy_files]
-enabled = false
-files = [".envrc", ".env.local", "compose.override.yaml"]
+copy_files:
+  enabled: false
+  files:
+    - ".envrc"
+    - ".env.local"
+    - "compose.override.yaml"
 ```
 
 ### Precedence
 
 1. Command-line arguments
-2. Local `.wkit.toml`
+2. Local `.wkit.yaml`
 3. Global config
 4. Built-in defaults
 

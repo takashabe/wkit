@@ -9,53 +9,26 @@ permissions:
   contents: write
 
 jobs:
-  build-and-upload:
-    name: Build and Upload
-    strategy:
-      matrix:
-        include:
-          - target: x86_64-apple-darwin
-            os: macos-latest
-            name: wkit-x86_64-apple-darwin
-          - target: aarch64-apple-darwin
-            os: macos-latest
-            name: wkit-aarch64-apple-darwin
-          - target: x86_64-unknown-linux-gnu
-            os: ubuntu-latest
-            name: wkit-x86_64-unknown-linux-gnu
-          - target: x86_64-pc-windows-msvc
-            os: windows-latest
-            name: wkit-x86_64-pc-windows-msvc.exe
-    runs-on: ${{ matrix.os }}
+  goreleaser:
+    name: GoReleaser
+    runs-on: ubuntu-latest
     
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
-      - name: Setup Rust
-        uses: dtolnay/rust-toolchain@stable
         with:
-          targets: ${{ matrix.target }}
+          fetch-depth: 0
 
-      - name: Build
-        run: cargo build --release --target ${{ matrix.target }}
-
-      - name: Prepare binary (Unix)
-        if: matrix.os != 'windows-latest'
-        run: |
-          cd target/${{ matrix.target }}/release
-          strip wkit
-          tar czf ${{ matrix.name }}.tar.gz wkit
-          
-      - name: Prepare binary (Windows)
-        if: matrix.os == 'windows-latest'
-        run: |
-          cd target/${{ matrix.target }}/release
-          7z a ${{ matrix.name }}.zip wkit.exe
-
-      - name: Upload Release Asset
-        uses: softprops/action-gh-release@v1
+      - name: Setup Go
+        uses: actions/setup-go@v5
         with:
-          files: |
-            target/${{ matrix.target }}/release/${{ matrix.name }}.tar.gz
-            target/${{ matrix.target }}/release/${{ matrix.name }}.zip
+          go-version: '1.24'
+
+      - name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@v6
+        with:
+          distribution: goreleaser
+          version: latest
+          args: release --clean
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

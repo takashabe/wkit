@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func TestResolveWorktreePath(t *testing.T) {
+func TestResolveWkitPath(t *testing.T) {
 	tests := []struct {
 		name         string
 		config       Config
@@ -17,23 +17,23 @@ func TestResolveWorktreePath(t *testing.T) {
 	}{
 		{
 			name:         "with provided path",
-			config:       Config{DefaultWorktreePath: ".git/.wkit-worktrees"},
+			config:       Config{WkitRoot: ".git/.wkit-worktrees"},
 			branch:       "feature-branch",
 			providedPath: "/custom/path",
 			repoRoot:     "/repo",
 			expected:     "/custom/path",
 		},
 		{
-			name:         "with relative default path",
-			config:       Config{DefaultWorktreePath: ".git/.wkit-worktrees"},
+			name:         "with relative wkit root",
+			config:       Config{WkitRoot: ".git/.wkit-worktrees"},
 			branch:       "feature-branch",
 			providedPath: "",
 			repoRoot:     "/repo",
 			expected:     "/repo/.git/.wkit-worktrees/feature-branch",
 		},
 		{
-			name:         "with absolute default path",
-			config:       Config{DefaultWorktreePath: "/absolute/path"},
+			name:         "with absolute wkit root",
+			config:       Config{WkitRoot: "/absolute/path"},
 			branch:       "feature-branch",
 			providedPath: "",
 			repoRoot:     "/repo",
@@ -43,11 +43,24 @@ func TestResolveWorktreePath(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := tt.config.ResolveWorktreePath(tt.branch, tt.providedPath, tt.repoRoot)
+			result := tt.config.ResolveWkitPath(tt.branch, tt.providedPath, tt.repoRoot)
 			if result != tt.expected {
-				t.Errorf("ResolveWorktreePath() = %v, want %v", result, tt.expected)
+				t.Errorf("ResolveWkitPath() = %v, want %v", result, tt.expected)
 			}
 		})
+	}
+}
+
+// Test backward compatibility with old ResolveWorktreePath function
+func TestResolveWorktreePath_BackwardCompatibility(t *testing.T) {
+	config := Config{WkitRoot: ".git/.wkit-worktrees"}
+	branch := "feature-branch"
+	repoRoot := "/repo"
+	expected := "/repo/.git/.wkit-worktrees/feature-branch"
+
+	result := config.ResolveWorktreePath(branch, "", repoRoot)
+	if result != expected {
+		t.Errorf("ResolveWorktreePath() = %v, want %v", result, expected)
 	}
 }
 
@@ -79,8 +92,8 @@ func TestLoad(t *testing.T) {
 
 	// The actual default value may vary based on viper's behavior when no config file exists
 	// Just check that it's not empty
-	if cfg.DefaultWorktreePath == "" {
-		t.Errorf("DefaultWorktreePath is empty")
+	if cfg.WkitRoot == "" {
+		t.Errorf("WkitRoot is empty")
 	}
 
 	if cfg.MainBranch != "main" {
@@ -122,6 +135,51 @@ func TestInitLocal(t *testing.T) {
 	configPath := filepath.Join(tmpDir, ".wkit.toml")
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
 		t.Errorf("Config file was not created at %v", configPath)
+	}
+}
+
+// Test backward compatibility when loading old config with default_worktree_path
+func TestLoad_BackwardCompatibility(t *testing.T) {
+	// Create a temporary directory for testing
+	tmpDir, err := os.MkdirTemp("", "wkit-test")
+	if err != nil {
+		t.Fatalf("Failed to create temp dir: %v", err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	// Change to the temp directory
+	oldCwd, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("Failed to get current directory: %v", err)
+	}
+	defer os.Chdir(oldCwd)
+
+	err = os.Chdir(tmpDir)
+	if err != nil {
+		t.Fatalf("Failed to change directory: %v", err)
+	}
+
+	// Create a config file with old key name
+	configContent := `default_worktree_path = "/old/path"`
+	err = os.WriteFile(".wkit.toml", []byte(configContent), 0644)
+	if err != nil {
+		t.Fatalf("Failed to write config file: %v", err)
+	}
+
+	// Load config and check if it migrates correctly
+	cfg, err := Load()
+	if err != nil {
+		t.Fatalf("Load() failed: %v", err)
+	}
+
+	// Check that WkitRoot is set from the old key
+	if cfg.WkitRoot != "/old/path" {
+		t.Errorf("WkitRoot = %v, want %v", cfg.WkitRoot, "/old/path")
+	}
+
+	// Check that DefaultWorktreePath is also set (for backward compatibility)
+	if cfg.DefaultWorktreePath != "/old/path" {
+		t.Errorf("DefaultWorktreePath = %v, want %v", cfg.DefaultWorktreePath, "/old/path")
 	}
 }
 

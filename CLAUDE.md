@@ -46,7 +46,9 @@ Uses a hierarchical configuration system:
 3. Global `~/.config/wkit/config.toml`
 4. Built-in defaults (lowest priority)
 
-Configuration keys: `default_worktree_path`, `auto_cleanup`, `default_sync_strategy`, `main_branch`, `copy_files`
+Configuration keys: `wkit_root`, `auto_cleanup`, `default_sync_strategy`, `main_branch`, `copy_files`
+
+Note: `default_worktree_path` is deprecated in favor of `wkit_root` but still supported for backward compatibility.
 
 ## Shell Integration
 

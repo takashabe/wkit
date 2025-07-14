@@ -11,7 +11,8 @@ import (
 
 // Config represents the application configuration
 type Config struct {
-	DefaultWorktreePath string   `mapstructure:"default_worktree_path"`
+	WkitRoot            string   `mapstructure:"wkit_root"`
+	DefaultWorktreePath string   `mapstructure:"default_worktree_path"` // 削除予定だが、互換性のため残す
 	AutoCleanup         bool     `mapstructure:"auto_cleanup"`
 	ZIntegration        bool     `mapstructure:"z_integration"` // 削除予定だが、互換性のため残す
 	DefaultSyncStrategy string   `mapstructure:"default_sync_strategy"`
@@ -35,7 +36,8 @@ func Load() (*Config, error) {
 	}
 
 	// Set default values
-	v.SetDefault("default_worktree_path", ".git/.wkit-worktrees")
+	v.SetDefault("wkit_root", ".git/.wkit-worktrees")
+	v.SetDefault("default_worktree_path", ".git/.wkit-worktrees") // 後方互換性のため残す
 	v.SetDefault("auto_cleanup", false)
 	v.SetDefault("z_integration", false)
 	v.SetDefault("default_sync_strategy", "merge")
@@ -72,6 +74,17 @@ func Load() (*Config, error) {
 		return nil, fmt.Errorf("failed to unmarshal config: %w", err)
 	}
 
+	// 後方互換性のため、古いキーから新しいキーに移行
+	if cfg.WkitRoot == "" || cfg.WkitRoot == ".git/.wkit-worktrees" {
+		// デフォルト値の場合、古いキーが設定されているかチェック
+		if cfg.DefaultWorktreePath != "" && cfg.DefaultWorktreePath != ".git/.wkit-worktrees" {
+			cfg.WkitRoot = cfg.DefaultWorktreePath
+			fmt.Fprintf(os.Stderr, "Warning: 'default_worktree_path' is deprecated. Please use 'wkit_root' instead.\n")
+		} else if cfg.WkitRoot == "" {
+			cfg.WkitRoot = ".git/.wkit-worktrees" // デフォルト値
+		}
+	}
+
 	return &cfg, nil
 }
 
@@ -93,7 +106,8 @@ func SaveGlobal(cfg *Config) error {
 	}
 
 	// Set values from the provided config struct
-	v.Set("default_worktree_path", cfg.DefaultWorktreePath)
+	v.Set("wkit_root", cfg.WkitRoot)
+	v.Set("default_worktree_path", cfg.DefaultWorktreePath) // 後方互換性のため残す
 	v.Set("auto_cleanup", cfg.AutoCleanup)
 	v.Set("z_integration", cfg.ZIntegration)
 	v.Set("default_sync_strategy", cfg.DefaultSyncStrategy)
@@ -117,7 +131,8 @@ func InitLocal() error {
 	v.AddConfigPath(".")
 
 	// Set default values
-	v.SetDefault("default_worktree_path", ".git/.wkit-worktrees")
+	v.SetDefault("wkit_root", ".git/.wkit-worktrees")
+	v.SetDefault("default_worktree_path", ".git/.wkit-worktrees") // 後方互換性のため残す
 	v.SetDefault("auto_cleanup", false)
 	v.SetDefault("z_integration", false)
 	v.SetDefault("default_sync_strategy", "merge")
@@ -133,15 +148,21 @@ func InitLocal() error {
 }
 
 // ResolveWorktreePath resolves the worktree path based on config and provided path
+// Deprecated: Use ResolveWkitPath instead
 func (c *Config) ResolveWorktreePath(branch string, providedPath string, repositoryRoot string) string {
+	return c.ResolveWkitPath(branch, providedPath, repositoryRoot)
+}
+
+// ResolveWkitPath resolves the worktree path based on wkit_root config and provided path
+func (c *Config) ResolveWkitPath(branch string, providedPath string, repositoryRoot string) string {
 	if providedPath != "" {
 		return providedPath
 	}
 
-	if filepath.IsAbs(c.DefaultWorktreePath) {
-		return filepath.Join(c.DefaultWorktreePath, branch)
+	if filepath.IsAbs(c.WkitRoot) {
+		return filepath.Join(c.WkitRoot, branch)
 	} else {
-		return filepath.Join(repositoryRoot, c.DefaultWorktreePath, branch)
+		return filepath.Join(repositoryRoot, c.WkitRoot, branch)
 	}
 }
 

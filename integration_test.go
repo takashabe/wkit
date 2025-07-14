@@ -59,8 +59,8 @@ func TestCLIIntegration(t *testing.T) {
 		if !strings.Contains(outputStr, "Current configuration:") {
 			t.Errorf("Config show output doesn't contain expected header")
 		}
-		if !strings.Contains(outputStr, "default_worktree_path:") {
-			t.Errorf("Config show output doesn't contain default_worktree_path")
+		if !strings.Contains(outputStr, "wkit_root:") {
+			t.Errorf("Config show output doesn't contain wkit_root")
 		}
 	})
 

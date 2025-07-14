@@ -156,8 +156,18 @@ func (c *Config) CopyFilesToWorktree(sourceDir string, targetDir string) ([]stri
 	var copiedFiles []string
 
 	for _, filePattern := range c.CopyFiles.Files {
-		// Check if it's a relative path or just a filename
-		if strings.Contains(filePattern, "/") || strings.Contains(filePattern, "\\") {
+		// Check if it's a directory (ends with /)
+		if strings.HasSuffix(filePattern, "/") {
+			sourceDir := filepath.Join(sourceDir, filePattern)
+			targetDir := filepath.Join(targetDir, filePattern)
+
+			if info, err := os.Stat(sourceDir); err == nil && info.IsDir() {
+				if err := c.copyDirectory(sourceDir, targetDir, filePattern, &copiedFiles); err != nil {
+					fmt.Fprintf(os.Stderr, "  Warning: Failed to copy directory %s: %v\n", filePattern, err)
+				}
+			}
+		} else if strings.Contains(filePattern, "/") || strings.Contains(filePattern, "\\") {
+			// It's a relative path
 			sourceFile := filepath.Join(sourceDir, filePattern)
 			targetFile := filepath.Join(targetDir, filePattern)
 
@@ -209,6 +219,34 @@ func (c *Config) copySingleFile(sourceFile string, targetFile string, relativePa
 
 	*copiedFiles = append(*copiedFiles, relativePath)
 	return nil
+}
+
+func (c *Config) copyDirectory(sourceDir string, targetDir string, relativePath string, copiedFiles *[]string) error {
+	return filepath.Walk(sourceDir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		if info.IsDir() && info.Name() == ".git" {
+			return filepath.SkipDir
+		}
+
+		if !info.IsDir() {
+			relPath, err := filepath.Rel(sourceDir, path)
+			if err != nil {
+				return err
+			}
+
+			sourceFile := path
+			targetFile := filepath.Join(targetDir, relPath)
+
+			if err := c.copySingleFile(sourceFile, targetFile, filepath.Join(relativePath, relPath), copiedFiles); err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
 }
 
 func findFilesByName(baseDir string, filename string) ([]string, error) {

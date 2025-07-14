@@ -66,14 +66,17 @@ func TestBranchExists(t *testing.T) {
 		t.Fatalf("Failed to get current branch: %v", err)
 	}
 
-	exists := executor.BranchExists(currentBranch)
-	if !exists {
-		t.Errorf("BranchExists(%s) = false, expected true for current branch", currentBranch)
+	// Skip test if we're in detached HEAD state (common in CI)
+	if currentBranch != "HEAD" {
+		exists := executor.BranchExists(currentBranch)
+		if !exists {
+			t.Errorf("BranchExists(%s) = false, expected true for current branch", currentBranch)
+		}
 	}
 
 	// Test with a branch that should not exist
 	nonExistentBranch := "this-branch-should-not-exist-12345"
-	exists = executor.BranchExists(nonExistentBranch)
+	exists := executor.BranchExists(nonExistentBranch)
 	if exists {
 		t.Errorf("BranchExists(%s) = true, expected false for non-existent branch", nonExistentBranch)
 	}

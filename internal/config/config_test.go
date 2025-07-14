@@ -84,6 +84,13 @@ func TestLoad(t *testing.T) {
 		t.Fatalf("Failed to change directory: %v", err)
 	}
 
+	// Set temporary HOME to avoid reading user's global config
+	oldHome := os.Getenv("HOME")
+	tmpHome := filepath.Join(tmpDir, "home")
+	os.Mkdir(tmpHome, 0755)
+	os.Setenv("HOME", tmpHome)
+	defer os.Setenv("HOME", oldHome)
+
 	// Test loading with default values
 	cfg, err := Load()
 	if err != nil {
@@ -96,8 +103,8 @@ func TestLoad(t *testing.T) {
 		t.Errorf("WkitRoot is empty")
 	}
 
-	if cfg.MainBranch != "develop" {
-		t.Errorf("MainBranch = %v, want %v", cfg.MainBranch, "develop")
+	if cfg.MainBranch != "main" {
+		t.Errorf("MainBranch = %v, want %v", cfg.MainBranch, "main")
 	}
 
 	if cfg.DefaultSyncStrategy != "merge" {

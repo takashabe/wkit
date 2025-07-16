@@ -8,14 +8,30 @@ function wkit-switch -d "Switch to a worktree"
         return 1
     end
     
-    set -l target_path (wkit switch $argv 2>&1)
+    set -l wkit_output (wkit switch $argv 2>&1)
     set -l exit_code $status
     
     if test $exit_code -eq 0
-        cd "$target_path"
-        echo "✓ Switched to worktree: "(basename "$target_path")" at $target_path"
+        # Check if output contains relative path (format: /path/to/worktree:relative/path)
+        if echo "$wkit_output" | grep -q ':'
+            set -l worktree_path (echo "$wkit_output" | cut -d: -f1)
+            set -l relative_path (echo "$wkit_output" | cut -d: -f2)
+            set -l target_path "$worktree_path/$relative_path"
+            
+            # Check if target directory exists, otherwise use worktree root
+            if test -d "$target_path"
+                cd "$target_path"
+                echo "✓ Switched to worktree: "(basename "$worktree_path")" at $target_path"
+            else
+                cd "$worktree_path"
+                echo "✓ Switched to worktree: "(basename "$worktree_path")" at $worktree_path (target directory not found)"
+            end
+        else
+            cd "$wkit_output"
+            echo "✓ Switched to worktree: "(basename "$wkit_output")" at $wkit_output"
+        end
     else
-        echo "Error: $target_path" >&2
+        echo "Error: $wkit_output" >&2
         return $exit_code
     end
 end
@@ -115,14 +131,33 @@ function wkit-add-auto -d "Add worktree with optional auto-switch"
     echo "$wkit_output"
     
     if test $exit_code -eq 0
-        # Extract the last word which should be the path
-        set -l words (echo "$wkit_output" | string split ' ')
-        set -l potential_path $words[-1]
+        # Extract the last line which should be the path (or path:relative_path)
+        set -l last_line (echo "$wkit_output" | tail -n 1)
         
-        # If the last word looks like a path, switch to it
-        if test -d "$potential_path"
-            cd "$potential_path"
-            echo "✓ Automatically switched to: "(basename "$potential_path")" at $potential_path"
+        # Check if output contains relative path (format: /path/to/worktree:relative/path)
+        if echo "$last_line" | grep -q ':'
+            set -l worktree_path (echo "$last_line" | cut -d: -f1)
+            set -l relative_path (echo "$last_line" | cut -d: -f2)
+            set -l target_path "$worktree_path/$relative_path"
+            
+            # Check if target directory exists, otherwise use worktree root
+            if test -d "$target_path"
+                cd "$target_path"
+                echo "✓ Automatically switched to: "(basename "$worktree_path")" at $target_path"
+            else
+                cd "$worktree_path"
+                echo "✓ Automatically switched to: "(basename "$worktree_path")" at $worktree_path"
+            end
+        else
+            # Extract the last word which should be the path
+            set -l words (echo "$last_line" | string split ' ')
+            set -l potential_path $words[-1]
+            
+            # If the last word looks like a path, switch to it
+            if test -d "$potential_path"
+                cd "$potential_path"
+                echo "✓ Automatically switched to: "(basename "$potential_path")" at $potential_path"
+            end
         end
     end
     
@@ -142,14 +177,33 @@ function wkit-checkout -d "Checkout existing branch and create worktree"
     echo "$wkit_output"
     
     if test $exit_code -eq 0
-        # Extract the last word which should be the path
-        set -l words (echo "$wkit_output" | string split ' ')
-        set -l potential_path $words[-1]
+        # Extract the last line which should be the path (or path:relative_path)
+        set -l last_line (echo "$wkit_output" | tail -n 1)
         
-        # If the last word looks like a path, switch to it
-        if test -d "$potential_path"
-            cd "$potential_path"
-            echo "✓ Automatically switched to: "(basename "$potential_path")" at $potential_path"
+        # Check if output contains relative path (format: /path/to/worktree:relative/path)
+        if echo "$last_line" | grep -q ':'
+            set -l worktree_path (echo "$last_line" | cut -d: -f1)
+            set -l relative_path (echo "$last_line" | cut -d: -f2)
+            set -l target_path "$worktree_path/$relative_path"
+            
+            # Check if target directory exists, otherwise use worktree root
+            if test -d "$target_path"
+                cd "$target_path"
+                echo "✓ Automatically switched to: "(basename "$worktree_path")" at $target_path"
+            else
+                cd "$worktree_path"
+                echo "✓ Automatically switched to: "(basename "$worktree_path")" at $worktree_path"
+            end
+        else
+            # Extract the last word which should be the path
+            set -l words (echo "$last_line" | string split ' ')
+            set -l potential_path $words[-1]
+            
+            # If the last word looks like a path, switch to it
+            if test -d "$potential_path"
+                cd "$potential_path"
+                echo "✓ Automatically switched to: "(basename "$potential_path")" at $potential_path"
+            end
         end
     end
     

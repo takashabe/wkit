@@ -25,7 +25,18 @@ func NewSwitchCmd() *cobra.Command {
 				return fmt.Errorf("failed to find worktree path: %w", err)
 			}
 
-			fmt.Println(worktreePath)
+			relativePath, err := worktree.GetRelativePathFromRoot()
+			if err != nil {
+				// If we can't get relative path, just output the worktree path
+				fmt.Println(worktreePath)
+				return nil
+			}
+
+			if relativePath != "" {
+				fmt.Printf("%s:%s\n", worktreePath, relativePath)
+			} else {
+				fmt.Println(worktreePath)
+			}
 			return nil
 		},
 	}

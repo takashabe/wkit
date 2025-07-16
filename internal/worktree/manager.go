@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 )
 
@@ -375,4 +376,32 @@ func (m *Manager) RemoveWorktree(worktreePath string) error {
 		return fmt.Errorf("failed to execute git worktree remove: %w: %s", err, strings.TrimSpace(string(output)))
 	}
 	return nil
+}
+
+// GetRelativePathFromRoot returns the relative path from the git repository root to the current working directory
+func GetRelativePathFromRoot() (string, error) {
+	// Get current working directory
+	currentDir, err := os.Getwd()
+	if err != nil {
+		return "", fmt.Errorf("failed to get current working directory: %w", err)
+	}
+
+	// Get repository root
+	repoRoot, err := GetRepositoryRoot()
+	if err != nil {
+		return "", fmt.Errorf("failed to get repository root: %w", err)
+	}
+
+	// Get relative path from repo root to current directory
+	relativePath, err := filepath.Rel(repoRoot, currentDir)
+	if err != nil {
+		return "", fmt.Errorf("failed to get relative path: %w", err)
+	}
+
+	// If the relative path is ".", it means we're at the repository root
+	if relativePath == "." {
+		return "", nil
+	}
+
+	return relativePath, nil
 }

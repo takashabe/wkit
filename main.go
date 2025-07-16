@@ -26,6 +26,7 @@ func init() {
 	rootCmd.AddCommand(cmd.NewStatusCmd())
 	rootCmd.AddCommand(cmd.NewCleanCmd())
 	rootCmd.AddCommand(cmd.NewSyncCmd())
+	rootCmd.AddCommand(cmd.NewRootCmd())
 }
 
 func main() {

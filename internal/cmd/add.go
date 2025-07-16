@@ -71,7 +71,15 @@ func NewAddCmd() *cobra.Command {
 			}
 
 			if !noSwitch {
-				fmt.Println(worktreePath)
+				relativePath, err := worktree.GetRelativePathFromRoot()
+				if err != nil {
+					// If we can't get relative path, just output the worktree path
+					fmt.Println(worktreePath)
+				} else if relativePath != "" {
+					fmt.Printf("%s:%s\n", worktreePath, relativePath)
+				} else {
+					fmt.Println(worktreePath)
+				}
 			}
 			return nil
 		},

@@ -21,3 +21,15 @@ jobs:
     - uses: Songmu/tagpr@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Add reviewer to tagpr PR
+      if: github.event_name == 'push'
+      run: |
+        # tagprが作成したPRを取得
+        PR_NUMBER=$(gh pr list --author "github-actions[bot]" --label "tagpr" --state "open" --limit 1 --json number --jq '.[0].number')
+        if [ ! -z "$PR_NUMBER" ] && [ "$PR_NUMBER" != "null" ]; then
+          gh pr edit $PR_NUMBER --add-reviewer takashabe
+          gh pr merge $PR_NUMBER --auto --squash
+        fi
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

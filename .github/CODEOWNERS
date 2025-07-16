@@ -1,0 +1,7 @@
+# 全てのファイルに対してレビュアーを設定
+* @takashabe
+
+# 特定のファイルに対してレビュアーを設定する場合の例
+# .github/ @takashabe
+# *.go @takashabe
+# README.md @takashabe

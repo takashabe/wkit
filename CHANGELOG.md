@@ -7,7 +7,7 @@
 - feat: add root command to display repository root directory by @takashabe in https://github.com/takashabe/wkit/pull/50
 - feat: add tagpr configuration for automated release management by @takashabe in https://github.com/takashabe/wkit/pull/51
 
-## [v0.2.0](https://github.com/takashabe/wkit/compare/v0.1.0...v0.2.0) - 2025-07-14
+## [v0.2.0](https://github.com/takashabe/wkit/compare/v0.1.1...v0.2.0) - 2025-07-14
 - feat: auto-create branch when adding worktree by @takashabe in https://github.com/takashabe/wkit/pull/10
 - feat: change default worktree path to .wkit-worktrees by @takashabe in https://github.com/takashabe/wkit/pull/11
 - bonsai readme by @takashabe in https://github.com/takashabe/wkit/pull/13
@@ -38,6 +38,8 @@
 - feat: add --base-branch flag to wkit add command by @takashabe in https://github.com/takashabe/wkit/pull/43
 - Remove default_worktree_path backward compatibility by @takashabe in https://github.com/takashabe/wkit/pull/45
 - feat: migrate configuration format from TOML to YAML by @takashabe in https://github.com/takashabe/wkit/pull/46
+
+## [v0.1.1](https://github.com/takashabe/wkit/compare/v0.1.0...v0.1.1) - 2025-07-16
 
 ## [v0.1.0](https://github.com/takashabe/wkit/commits/v0.1.0) - 2025-06-12
 - Implement comprehensive worktree management with Fish integration by @takashabe in https://github.com/takashabe/wkit/pull/5

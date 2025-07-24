@@ -20,8 +20,19 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 # Build the project
 go build -o wkit .
 
-# Run tests
+# Run all tests
 go test ./...
+
+# Run specific test file
+go test ./integration_test.go
+
+# Run tests with verbose output
+go test -v ./...
+
+# Code formatting and linting
+go fmt ./...
+gofmt -s -l .
+go vet ./...
 
 # Install to system (after building)
 sudo cp wkit /usr/local/bin/
@@ -56,3 +67,33 @@ The `examples/fish/` directory contains example Fish shell integrations that use
 - Prompt integration to show current worktree info
 - Smart worktree creation and management functions
 - Examples of using JSON output with tools like jq and fzf
+
+## Testing Strategy
+
+### Integration Tests
+- Located in `integration_test.go` at the project root
+- Tests CLI binary by building and executing actual commands
+- Requires Git repository environment
+- Skipped if Git is not available
+
+### Unit Tests
+- Located in `internal/` package subdirectories as `*_test.go`
+- Tests configuration management, worktree operations, and command logic
+- Run with `go test ./internal/...` for package-specific testing
+
+## CI/CD and Release Management
+
+### Continuous Integration (`.github/workflows/ci.yml`)
+- Automated testing on Go 1.19-1.22 across Linux, macOS, and Windows
+- Cross-compilation testing for multiple architectures (amd64, arm64)
+- Code quality checks including `go vet` and formatting validation
+
+### Release Automation
+- **tagpr** (`tagpr.yml`): Automated version management using Conventional Commits
+- **GoReleaser** (`.goreleaser.yml`): Cross-platform binary distribution
+- **Automated releases**: Triggered on tag pushes to create GitHub releases with binaries
+
+### Development Workflow
+- Conventional Commits enforced for consistent release notes
+- Automatic CHANGELOG.md generation
+- Cross-platform testing ensures compatibility

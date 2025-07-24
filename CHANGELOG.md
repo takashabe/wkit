@@ -1,5 +1,7 @@
 # Changelog
 
+## [v0.2.4](https://github.com/takashabe/wkit/compare/v0.2.3...v0.2.4) - 2025-07-24
+
 ## [v0.2.1](https://github.com/takashabe/wkit/compare/v0.2.0...v0.2.1) - 2025-07-16
 - feat: add GoReleaser configuration for automated releases by @takashabe in https://github.com/takashabe/wkit/pull/47
 - feat: add directory copying support to copy_files configuration by @takashabe in https://github.com/takashabe/wkit/pull/48
